@@ -5,7 +5,7 @@ with open("README.md", mode="r", encoding="utf-8") as readme:
 
 
 setup(
-    name='korai',
+    name='koai',
     version='0.0.0.1',
     description='Korean AI Project',
     long_description=long_description,
@@ -16,11 +16,11 @@ setup(
     zip_safe=False,
     license="MIT",
 
-    py_modules=["korai"],
+    py_modules=["koai"],
 
     python_requires=">=3",
 
-    packages=["korai"],
+    packages=["koai"],
     include_package_data=True,
     classifiers=[
         "Intended Audience :: Developers",
