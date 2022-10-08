@@ -2,8 +2,10 @@ from collections import OrderedDict
 from inspect import signature
 from typing import List, Optional
 from datasets import load_dataset
-from finetune_utils import get_task_info, get_example_function, TaskInfo, get_model, get_trainer, get_data_collator
+from finetune_utils import get_task_info, get_example_function, TaskInfo, get_model, get_trainer, get_data_collator, trim_task_name
 from transformers import AutoTokenizer, PreTrainedModel
+import os
+
 def finetune(
         task_name: str,
         model_name_or_path: str,
@@ -12,7 +14,7 @@ def finetune(
         max_source_length: int = 512,
         max_target_length: Optional[int] = None,
         padding: str = "longest",
-        save_model: bool = True,
+        save_model: bool = False,
         output_dir: str = "runs/",
         finetune_model_across_the_tasks: bool = False,
         *args, **kwargs) -> PreTrainedModel:
@@ -50,6 +52,9 @@ def finetune(
         trainer = trainer(
             model=model
         )
+        if save_model:
+            _path = os.path.join(output_dir, trim_task_name(task_name))
+            trainer.save_model(output_dir=_path)
 
         print(traininig_args_params)
 

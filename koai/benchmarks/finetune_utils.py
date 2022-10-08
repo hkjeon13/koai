@@ -16,6 +16,7 @@ from transformers import (
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
 )
+import re
 
 MODEL_CONFIG = OrderedDict([
     ('sequence-classification', AutoModelForSequenceClassification),
@@ -105,3 +106,8 @@ def get_trainer(task_type: str):
 
 def get_data_collator(task_type:str):
     get_trainer
+
+def trim_task_name(name:str):
+    name = name.replace(" ", "_").replace(".", "_")
+    name = re.sub("[^a-zA-Z가-힣0-9\-_]+", "", name)
+    return name
