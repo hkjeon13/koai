@@ -15,6 +15,7 @@ from finetune_utils import (
 
 import os
 
+
 def finetune(
         task_name: str,
         model_name_or_path: str,
@@ -28,7 +29,6 @@ def finetune(
         output_dir: str = "runs/",
         finetune_model_across_the_tasks: bool = False,
         *args, **kwargs) -> PreTrainedModel:
-
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     infolist = custom_task_infolist
     if infolist is None:
@@ -62,8 +62,11 @@ def finetune(
         )
 
         trainer = trainer(
-            model=model
+            model=model,
+            train_dataset=dataset.get(info.train_split),
+            eval_dataset=dataset.get(info.eval_split),
         )
+
         if save_model:
             _path = os.path.join(output_dir, trim_task_name(task_name))
             trainer.save_model(output_dir=_path)
