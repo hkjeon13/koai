@@ -4,13 +4,23 @@ from collections import OrderedDict
 from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForTokenClassification,
+    AutoModelForCausalLM,
+    AutoModelForQuestionAnswering,
+    AutoModelForMaskedLM,
     PreTrainedTokenizerBase,
-    PreTrainedTokenizerFast
+    PreTrainedTokenizerFast,
+    PreTrainedModel
 )
 
 MODEL_CONFIG = OrderedDict([
     ('sequence-classification', AutoModelForSequenceClassification),
     ('token-classification', AutoModelForTokenClassification),
+    ('conditional-generation', AutoModelForCausalLM),
+    ('question-answering', AutoModelForQuestionAnswering),
+    ('masked-language-modeling', AutoModelForMaskedLM),
+    ('causal-language-modeling', AutoModelForCausalLM),
+    ('conditional-generation', AutoModelForCausalLM),
+
 ])
 
 
@@ -31,9 +41,18 @@ class TaskInfo:
         self.label_column = data.get("label_column")
         self.preprocess_function = data.get("preprocess_function")
 
+
 def klue_sts_function(examples):
     examples['labels'] = [label["binary-label"] for label in examples['labels']]
     return examples
+
+
+def get_model(model_name_or_path: str, task_type:str) -> PreTrainedModel:
+    model = MODEL_CONFIG.get(task_type)
+    if model is None:
+        raise FileExistsError(f"Can't find any model matching '{model_name_or_path}' on huggingface hub or local directory.")
+    return model
+
 
 def get_task_info(task_name: str):
     return [
