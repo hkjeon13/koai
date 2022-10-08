@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, Callable
 from collections import OrderedDict
 from transformers import (
     AutoModelForSequenceClassification,
@@ -21,6 +21,15 @@ class TaskInfo:
     text_column: str
     text_pair_column: str
     label_column: str
+    preprocess_function: Callable
+
+    def from_dict(self, data: dict) -> None:
+        self.task = data.get("task")
+        self.task_type = data.get("task_type")
+        self.text_column = data.get("text_column")
+        self.text_pair_column = data.get("text_pair_column")
+        self.label_column = data.get("label_column")
+        self.preprocess_function = data.get("preprocess_function")
 
 
 def get_task_info(task_name: str):
