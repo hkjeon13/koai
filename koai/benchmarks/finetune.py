@@ -16,7 +16,7 @@ def finetune(
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     infolist = custom_task_infolist
     if infolist is None:
-        infolist += get_task_info(task_name=task_name)
+        infolist = get_task_info(task_name=task_name)
 
     for info in infolist:
         dataset = load_dataset(*info.task)
@@ -30,10 +30,12 @@ def finetune(
         if remove_columns:
             _rm_columns += list(dataset.column_names.values())[0]
         dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
+        print(dataset)
 
 
     return None
 
 
 if __name__ == "__main__":
+
     finetune("klue-sts", "klue/bert-base")
