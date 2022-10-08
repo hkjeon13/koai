@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from inspect import signature
 from typing import List, Optional
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer, PreTrainedModel
 from finetune_utils import (
     TaskInfo,
@@ -10,11 +10,15 @@ from finetune_utils import (
     get_model,
     get_trainer,
     get_data_collator,
-    trim_task_name
+    trim_task_name,
 )
 
 import os
 
+def get_dataset_columns(dataset:DatasetDict):
+    columns = []
+    columns += list(dataset.column_names.values())[0]
+    return columns
 
 def finetune(
         task_name: str,
@@ -29,10 +33,13 @@ def finetune(
         output_dir: str = "runs/",
         finetune_model_across_the_tasks: bool = False,
         *args, **kwargs) -> PreTrainedModel:
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+
     infolist = custom_task_infolist
     if infolist is None:
         infolist = get_task_info(task_name=task_name)
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
+
     models_for_return = []
     for info in infolist:
         dataset = load_dataset(*info.task)
@@ -45,22 +52,21 @@ def finetune(
             padding=padding,
         )
 
-        _rm_columns = []
-        if remove_columns:
-            _rm_columns += list(dataset.column_names.values())[0]
-
+        _rm_columns = get_dataset_columns(dataset)
         dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
 
         data_collator = get_data_collator(task_type=info.task_type)
+
         collator_params = list(signature(data_collator).parameters.keys())
         params = {arg: kwargs[arg] for arg in collator_params if arg in kwargs}
         if "tokenizer" in collator_params:
             params['tokenizer'] = tokenizer
-        data_collator = data_collator(**params)
 
-        model = get_model(model_name_or_path, info.task_type)
+        data_collator = data_collator(**params)
+        model = get_model(model_name_or_path, info)
 
         traininig_args, trainer = get_trainer(info.task_type)
+
         traininig_args_params = list(signature(traininig_args).parameters.keys())
         traininig_args_params = {arg: kwargs[arg] for arg in traininig_args_params if arg in kwargs}
 
@@ -68,9 +74,10 @@ def finetune(
             output_dir=output_dir,
             **traininig_args_params,
         )
-
+        print(next(iter(dataset['train'])))
         trainer = trainer(
             model=model,
+            args=traininig_args,
             data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
             eval_dataset=dataset.get(info.eval_split),
@@ -78,6 +85,7 @@ def finetune(
 
         if kwargs.get("do_train", False):
             trainer.train()
+
         elif kwargs.get("do_eval"):
             trainer.evaluate()
 
@@ -95,4 +103,4 @@ def finetune(
 
 
 if __name__ == "__main__":
-    finetune("klue", "klue/bert-base", do_train=True)
+    finetune("klue-ner", "klue/bert-base", do_train=True)
