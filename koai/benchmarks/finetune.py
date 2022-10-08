@@ -70,8 +70,10 @@ def finetune(
 
         if return_models:
             models_for_return.append(trainer.model)
+
     if return_models:
         return models_for_return
+
     return None
 
 
