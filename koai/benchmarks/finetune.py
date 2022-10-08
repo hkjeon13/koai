@@ -36,6 +36,7 @@ def finetune(
     models_for_return = []
     for info in infolist:
         dataset = load_dataset(*info.task)
+        dataset = dataset.map(info.preprocess_function, batched=True)
         example_function = get_example_function(
             info,
             tokenizer=tokenizer,
@@ -43,18 +44,25 @@ def finetune(
             max_target_length=max_target_length,
             padding=padding,
         )
+
         _rm_columns = []
         if remove_columns:
             _rm_columns += list(dataset.column_names.values())[0]
 
         dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
+
         data_collator = get_data_collator(task_type=info.task_type)
+        collator_params = list(signature(data_collator).parameters.keys())
+        params = {arg: kwargs[arg] for arg in collator_params if arg in kwargs}
+        if "tokenizer" in collator_params:
+            params['tokenizer'] = tokenizer
+        data_collator = data_collator(**params)
 
         model = get_model(model_name_or_path, info.task_type)
 
         traininig_args, trainer = get_trainer(info.task_type)
         traininig_args_params = list(signature(traininig_args).parameters.keys())
-        traininig_args_params = {arg: kwargs[args] for arg in traininig_args_params if arg in kwargs}
+        traininig_args_params = {arg: kwargs[arg] for arg in traininig_args_params if arg in kwargs}
 
         traininig_args = traininig_args(
             output_dir=output_dir,
@@ -63,9 +71,15 @@ def finetune(
 
         trainer = trainer(
             model=model,
+            data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
             eval_dataset=dataset.get(info.eval_split),
         )
+
+        if kwargs.get("do_train", False):
+            trainer.train()
+        elif kwargs.get("do_eval"):
+            trainer.evaluate()
 
         if save_model:
             _path = os.path.join(output_dir, trim_task_name(task_name))
@@ -81,4 +95,4 @@ def finetune(
 
 
 if __name__ == "__main__":
-    finetune("klue-sts", "klue/bert-base")
+    finetune("klue-sts", "klue/bert-base", do_train=True)

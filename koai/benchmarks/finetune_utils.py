@@ -46,6 +46,7 @@ MODEL_CONFIG = OrderedDict([
     ('sequence-to-sequence', AutoModelForSeq2SeqLM)
 ])
 
+
 TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column",
               "preprocess_function", "train_split", "eval_split"]
 
