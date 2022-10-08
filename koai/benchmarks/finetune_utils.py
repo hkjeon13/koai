@@ -78,6 +78,8 @@ def get_model(model_name_or_path: str, task_type:str) -> PreTrainedModel:
 
 
 def get_task_info(task_name: str):
+    print(task_name)
+    raise ValueError
     return [
         TaskInfo(
             task=("klue", "sts"),
@@ -122,8 +124,10 @@ def get_trainer(task_type: str):
     else:
         return TrainingArguments, Trainer
 
-def get_data_collator(task_type:str):
+
+def get_data_collator(task_type: str):
     return DATA_COLLATOR.get(task_type, DataCollatorWithPadding)
+
 
 def trim_task_name(name:str):
     name = name.replace(" ", "_").replace(".", "_")

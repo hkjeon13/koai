@@ -95,4 +95,4 @@ def finetune(
 
 
 if __name__ == "__main__":
-    finetune("klue-sts", "klue/bert-base", do_train=True)
+    finetune("klue", "klue/bert-base", do_train=True)
