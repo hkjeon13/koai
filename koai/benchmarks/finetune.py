@@ -51,7 +51,6 @@ def finetune(
         data_collator = get_data_collator(task_type=info.task_type)
         model = get_model(model_name_or_path, info.task_type)
 
-
         traininig_args, trainer = get_trainer(info.task_type)
         traininig_args_params = list(signature(traininig_args).parameters.keys())
         traininig_args_params = {arg: kwargs[args] for arg in traininig_args_params if arg in kwargs}
