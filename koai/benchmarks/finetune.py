@@ -13,15 +13,21 @@ MODEL_CONFIG = OrderedDict([
 ])
 
 
-def finetune(task_name: str, model_name_or_path: str):
+def finetune(task_name: str, model_name_or_path: str, remove_columns: bool = True):
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     infolist = get_task_info(task_name=task_name)
     for info in infolist:
+        print(info)
         dataset = load_dataset(*info.task)
-        example_function = get_example_function(info.task_type, tokenizer)
+        example_function = get_example_function(info, tokenizer)
+        _rm_columns = []
+        if remove_columns:
+            _rm_columns+=list(dataset.column_names.values())[0]
+        dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
+        print(dataset)
 
     return None
 
 
 if __name__ == "__main__":
-    finetune("klue-sts")
+    finetune("klue-sts", "klue/bert-base")

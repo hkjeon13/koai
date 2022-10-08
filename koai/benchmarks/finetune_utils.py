@@ -31,6 +31,9 @@ class TaskInfo:
         self.label_column = data.get("label_column")
         self.preprocess_function = data.get("preprocess_function")
 
+def klue_sts_function(examples):
+    examples['labels'] = [label["binary-label"] for label in examples['labels']]
+    return examples
 
 def get_task_info(task_name: str):
     return [
@@ -39,7 +42,8 @@ def get_task_info(task_name: str):
             task_type="sequence-classification",
             text_column="sentence1",
             text_pair_column="sentence2",
-            label_column="labels"
+            label_column="labels",
+            preprocess_function=klue_sts_function
         )
     ]
 
@@ -63,6 +67,6 @@ def get_example_function(
             )
             if info.label_column in examples:
                 tokenized['labels'] = [label for label in examples[info.label_column]]
-            return examples
+            return tokenized
 
     return example_function
