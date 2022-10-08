@@ -3,6 +3,7 @@ import re
 import json
 from dataclasses import dataclass, field
 from typing import Tuple, Union, Optional, Callable
+from evaluation import get_metrics
 from preprocess import *
 from transformers import (
     AutoModelForSequenceClassification,
@@ -48,7 +49,7 @@ MODEL_CONFIG = OrderedDict([
 ])
 
 
-TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column",
+TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name"
               "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words"]
 
 
@@ -73,6 +74,7 @@ class TaskInfo:
     text_pair_column: Optional[str] = None
     train_split: str = "train"
     eval_split: str = "validation"
+    metric_name: Optional[str] = None,
     extra_options: dict = field(default_factory=dict)
     is_split_into_words: bool = False
     preprocess_function: Optional[Callable] = None
@@ -110,20 +112,7 @@ def get_example_function(
         padding: str = "longest",
         truncation: bool = True
 ):
-    if info.task_type == "sequence-classification":
-        def example_function(examples):
-            tokenized_inputs = tokenizer(
-                examples.get(info.text_column),
-                text_pair=examples.get(info.text_pair_column),
-                max_length=max_source_length,
-                truncation=truncation,
-                padding=padding,
-                is_split_into_words=info.is_split_into_words
-            )
-            if info.label_column in examples:
-                tokenized_inputs['labels'] = [label for label in examples[info.label_column]]
-            return tokenized_inputs
-    elif info.task_type == "token-classification":
+    if info.task_type == "token-classification":
         extra_options = info.extra_options
         label_all_tokens = extra_options.get("label_all_tokens", False)
         b_to_i_label = extra_options.get("extra_options", [])
@@ -155,7 +144,19 @@ def get_example_function(
                 labels.append(label_ids)
             tokenized_inputs["labels"] = labels
             return tokenized_inputs
-
+    else:
+        def example_function(examples):
+            tokenized_inputs = tokenizer(
+                examples.get(info.text_column),
+                text_pair=examples.get(info.text_pair_column),
+                max_length=max_source_length,
+                truncation=truncation,
+                padding=padding,
+                is_split_into_words=info.is_split_into_words
+            )
+            if info.label_column in examples:
+                tokenized_inputs['labels'] = [label for label in examples[info.label_column]]
+            return tokenized_inputs
     return example_function
 
 

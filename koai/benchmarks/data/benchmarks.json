@@ -1,7 +1,6 @@
 {
-  "klue-sts": {"task":"klue-sts","task_type":"sequence-classification", "text_column": "sentence1", "text_pair_column":"sentence2", "label_column": "labels"},
-  "klue-ynat": {"task":"klue-ynat","task_type":"sequence-classification", "text_column": "title", "text_pair_column":null, "label_column": "label"},
-  "klue-nli": {"task":"klue-nli", "task_type":"sequence-classification", "text_column": "premise", "text_pair_column":"hypothesis", "label_column": "label", "num_labels":3},
-  "klue-ner": {"task":"klue-ner", "task_type":"token-classification", "text_column": "tokens", "label_column": "ner_tags", "is_split_into_words": true, "num_labels": 13, "extra_options": {"label_all_tokens": false, "label_names": ["B-DT", "I-DT", "B-LC", "I-LC", "B-OG", "I-OG", "B-PS", "I-PS", "B-QT", "I-QT", "B-TI", "I-TI", "O"], "label_all_tokens": false, "extra_options": [1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 12]}}
-
+  "klue-sts": {"task":"klue-sts","task_type":"sequence-classification", "text_column": "sentence1", "text_pair_column":"sentence2", "label_column": "labels", "metric_name":"f1"},
+  "klue-ynat": {"task":"klue-ynat","task_type":"sequence-classification", "text_column": "title", "text_pair_column":null, "label_column": "label", "metric_name":"f1"},
+  "klue-nli": {"task":"klue-nli", "task_type":"sequence-classification", "text_column": "premise", "text_pair_column":"hypothesis", "label_column": "label", "num_labels":3,  "metric_name":"accuracy"},
+  "klue-ner": {"task":"klue-ner", "task_type":"token-classification", "text_column": "tokens", "label_column": "ner_tags", "is_split_into_words": true, "num_labels": 13, "extra_options": {"label_all_tokens": false, "label_names": ["B-DT", "I-DT", "B-LC", "I-LC", "B-OG", "I-OG", "B-PS", "I-PS", "B-QT", "I-QT", "B-TI", "I-TI", "O"], "label_all_tokens": false, "extra_options": [1, 1, 3, 3, 5, 5, 7, 7, 9, 9, 11, 11, 12]}, metric_name="seqeval"}
 }

@@ -11,7 +11,9 @@ from finetune_utils import (
     get_trainer,
     get_data_collator,
     trim_task_name,
+    get_metrics
 )
+
 
 import os
 
@@ -65,6 +67,8 @@ def finetune(
         data_collator = data_collator(**params)
         model = get_model(model_name_or_path, info)
 
+        compute_metrics = get_metrics(info.task_type, )
+
         traininig_args, trainer = get_trainer(info.task_type)
 
         traininig_args_params = list(signature(traininig_args).parameters.keys())
@@ -74,7 +78,7 @@ def finetune(
             output_dir=output_dir,
             **traininig_args_params,
         )
-        print(next(iter(dataset['train'])))
+
         trainer = trainer(
             model=model,
             args=traininig_args,
