@@ -24,6 +24,7 @@ def finetune(
         max_target_length: Optional[int] = None,
         padding: str = "longest",
         save_model: bool = False,
+        return_models: bool = False,
         output_dir: str = "runs/",
         finetune_model_across_the_tasks: bool = False,
         *args, **kwargs) -> PreTrainedModel:
@@ -32,7 +33,7 @@ def finetune(
     infolist = custom_task_infolist
     if infolist is None:
         infolist = get_task_info(task_name=task_name)
-
+    models_for_return = []
     for info in infolist:
         dataset = load_dataset(*info.task)
         example_function = get_example_function(
@@ -67,9 +68,12 @@ def finetune(
             _path = os.path.join(output_dir, trim_task_name(task_name))
             trainer.save_model(output_dir=_path)
 
+        if return_models:
+            models_for_return.append(trainer.model)
+    if return_models:
+        return models_for_return
     return None
 
 
 if __name__ == "__main__":
-
     finetune("klue-sts", "klue/bert-base")
