@@ -2,8 +2,17 @@ from collections import OrderedDict
 from inspect import signature
 from typing import List, Optional
 from datasets import load_dataset
-from finetune_utils import get_task_info, get_example_function, TaskInfo, get_model, get_trainer, get_data_collator, trim_task_name
 from transformers import AutoTokenizer, PreTrainedModel
+from finetune_utils import (
+    TaskInfo,
+    get_task_info,
+    get_example_function,
+    get_model,
+    get_trainer,
+    get_data_collator,
+    trim_task_name
+)
+
 import os
 
 def finetune(
@@ -38,8 +47,10 @@ def finetune(
             _rm_columns += list(dataset.column_names.values())[0]
 
         dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
-
+        data_collator = get_data_collator(task_type=info.task_type)
         model = get_model(model_name_or_path, info.task_type)
+
+
         traininig_args, trainer = get_trainer(info.task_type)
         traininig_args_params = list(signature(traininig_args).parameters.keys())
         traininig_args_params = {arg: kwargs[args] for arg in traininig_args_params if arg in kwargs}
@@ -55,9 +66,6 @@ def finetune(
         if save_model:
             _path = os.path.join(output_dir, trim_task_name(task_name))
             trainer.save_model(output_dir=_path)
-
-        print(traininig_args_params)
-
 
     return None
 

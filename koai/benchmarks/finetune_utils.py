@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Tuple, Union, Optional, Callable
 from collections import OrderedDict
@@ -15,8 +16,24 @@ from transformers import (
     TrainingArguments,
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
+    DataCollatorWithPadding,
+    DataCollatorForSOP,
+    DataCollatorForLanguageModeling,
+    DataCollatorForTokenClassification,
+    DataCollatorForSeq2Seq,
+    DataCollatorForPermutationLanguageModeling,
+    DataCollatorForWholeWordMask,
+    DefaultDataCollator
 )
-import re
+
+DATA_COLLATOR = OrderedDict([
+    ("sop",DataCollatorForSOP),
+    ("language-modeling",DataCollatorForLanguageModeling),
+    ("token-classification", DataCollatorForTokenClassification),
+    ("sequence-to-sequence", DataCollatorForSeq2Seq),
+    ("permutation-language-modeling", DataCollatorForPermutationLanguageModeling),
+    ("whole-word-mask", DataCollatorForWholeWordMask),
+])
 
 MODEL_CONFIG = OrderedDict([
     ('sequence-classification', AutoModelForSequenceClassification),
@@ -105,7 +122,7 @@ def get_trainer(task_type: str):
         return TrainingArguments, Trainer
 
 def get_data_collator(task_type:str):
-    get_trainer
+    return DATA_COLLATOR.get(task_type, DataCollatorWithPadding)
 
 def trim_task_name(name:str):
     name = name.replace(" ", "_").replace(".", "_")
