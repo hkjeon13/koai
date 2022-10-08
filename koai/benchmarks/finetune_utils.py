@@ -18,11 +18,20 @@ MODEL_CONFIG = OrderedDict([
 class TaskInfo:
     task: Tuple[str, str]
     task_type: str
+    text_column: str
+    text_pair_column: str
+    label_column: str
 
 
 def get_task_info(task_name: str):
     return [
-        TaskInfo(task=("klue", "sts"), task_type="sequence-classification")
+        TaskInfo(
+            task=("klue", "sts"),
+            task_type="sequence-classification",
+            text_column="sentence1",
+            text_pair_column="sentence2",
+            label_column="labels"
+        )
     ]
 
 
@@ -38,9 +47,13 @@ def get_example_function(
         def example_function(examples):
             tokenized = tokenizer(
                 examples.get(info.text_column),
-                text_pair=examples.get(info.text_pair),
+                text_pair=examples.get(info.text_pair_column),
                 max_length=max_source_length,
                 truncation=truncation,
                 padding=padding
             )
+            if info.label_column in examples:
+                tokenized['labels'] = [label for label in examples[info.label_column]]
             return examples
+
+    return example_function

@@ -13,8 +13,6 @@ MODEL_CONFIG = OrderedDict([
 ])
 
 
-
-
 def finetune(task_name: str, model_name_or_path: str):
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     infolist = get_task_info(task_name=task_name)
