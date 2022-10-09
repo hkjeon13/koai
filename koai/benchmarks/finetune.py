@@ -3,7 +3,7 @@ from inspect import signature
 from typing import List, Optional
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer, PreTrainedModel, logging
-from finetune_utils import (
+from .finetune_utils import (
     TaskInfo,
     get_task_info,
     get_example_function,
