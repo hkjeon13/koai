@@ -22,6 +22,13 @@ setup(
 
     packages=["koai"],
     include_package_data=True,
+    install_requires=[
+            "transformers",
+            "datasets",
+            "seqeval",
+            "nltk",
+            "rouge_score",
+    ],
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
