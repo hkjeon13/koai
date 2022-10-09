@@ -44,7 +44,6 @@ MODEL_CONFIG = OrderedDict([
     ('question-answering', AutoModelForQuestionAnswering),
     ('masked-language-modeling', AutoModelForMaskedLM),
     ('causal-language-modeling', AutoModelForCausalLM),
-    ('conditional-generation', AutoModelForCausalLM),
     ('sequence-to-sequence', AutoModelForSeq2SeqLM)
 ])
 
