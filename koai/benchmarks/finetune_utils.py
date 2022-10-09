@@ -3,7 +3,7 @@ import re
 import json
 from dataclasses import dataclass, field
 from typing import Tuple, Union, Optional, Callable
-from evaluation import get_metrics
+from .evaluation import get_metrics
 from .preprocess import *
 from transformers import (
     AutoModelForSequenceClassification,
