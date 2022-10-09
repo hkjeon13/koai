@@ -7,7 +7,6 @@ nltk.download("punkt")
 from nltk import sent_tokenize
 
 
-
 def postprocess_text(preds, labels, metric='rouge'):
     preds = [pred.strip() for pred in preds]
     labels = [label.strip() for label in labels]
