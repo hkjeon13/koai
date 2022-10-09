@@ -28,6 +28,7 @@ setup(
             "seqeval",
             "nltk",
             "rouge_score",
+            "evaluate"
     ],
     classifiers=[
         "Intended Audience :: Developers",
