@@ -2,3 +2,4 @@ transformers
 datasets
 evaluate
 nltk
+seqeval

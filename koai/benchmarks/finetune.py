@@ -2,7 +2,7 @@ from collections import OrderedDict
 from inspect import signature
 from typing import List, Optional
 from datasets import load_dataset, DatasetDict
-from transformers import AutoTokenizer, PreTrainedModel
+from transformers import AutoTokenizer, PreTrainedModel, logging
 from finetune_utils import (
     TaskInfo,
     get_task_info,
@@ -16,6 +16,8 @@ from finetune_utils import (
 
 
 import os
+
+logger = logging.get_logger(__file__)
 
 def get_dataset_columns(dataset:DatasetDict):
     columns = []
@@ -66,8 +68,12 @@ def finetune(
 
         data_collator = data_collator(**params)
         model = get_model(model_name_or_path, info)
-
-        compute_metrics = get_metrics(info.task_type, )
+        compute_metrics = get_metrics(
+            task_type=info.task_type,
+            id2label=model.config.id2label,
+            metric_name=info.metric_name,
+            tokenizer=tokenizer
+        )
 
         traininig_args, trainer = get_trainer(info.task_type)
 
@@ -82,16 +88,17 @@ def finetune(
         trainer = trainer(
             model=model,
             args=traininig_args,
+            compute_metrics=compute_metrics,
             data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
             eval_dataset=dataset.get(info.eval_split),
         )
-
         if kwargs.get("do_train", False):
             trainer.train()
 
         elif kwargs.get("do_eval"):
-            trainer.evaluate()
+            eval_result = trainer.evaluate()
+            print(eval_result)
 
         if save_model:
             _path = os.path.join(output_dir, trim_task_name(task_name))
@@ -107,4 +114,4 @@ def finetune(
 
 
 if __name__ == "__main__":
-    finetune("klue-ner", "klue/bert-base", do_train=True)
+    finetune("klue-ner", "klue/bert-base", do_train=True, do_eval=True)

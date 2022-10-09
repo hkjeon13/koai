@@ -48,7 +48,7 @@ MODEL_CONFIG = OrderedDict([
 ])
 
 
-TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name"
+TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name", "extra_options",
               "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words"]
 
 
@@ -60,7 +60,7 @@ PROCESS_FUNCTIONS_MAP = OrderedDict([
     ("klue-sts", klue_sts_preprocess_function),
 ])
 
-TASKS = {k: dict(v, **{"preprocess_function": PROCESS_FUNCTIONS_MAP.get(k)}) for k,v in TASKS.items()}
+TASKS = {k: dict(v, **{"preprocess_function": PROCESS_FUNCTIONS_MAP.get(k)}) for k, v in TASKS.items()}
 
 
 @dataclass
@@ -73,10 +73,11 @@ class TaskInfo:
     text_pair_column: Optional[str] = None
     train_split: str = "train"
     eval_split: str = "validation"
-    metric_name: Optional[str] = None,
+    metric_name: Optional[str] = None
     extra_options: dict = field(default_factory=dict)
     is_split_into_words: bool = False
     preprocess_function: Optional[Callable] = None
+
     @classmethod
     def from_dict(cls, data: dict) -> None:
         info = {k: data.get(k) for k in TASK_ATTRS}
@@ -89,6 +90,10 @@ def get_model(model_name_or_path: str, info: TaskInfo) -> PreTrainedModel:
     _model = MODEL_CONFIG.get(info.task_type).from_pretrained(model_name_or_path, num_labels=info.num_labels)
     if _model is None:
         raise FileExistsError(f"Can't find any model matching '{model_name_or_path}' on huggingface hub or local directory.")
+    label_names = info.extra_options.get("label_names")
+    if info.task_type == "token-classification" and label_names:
+        _model.config.id2label = {i: l for i, l in enumerate(label_names)}
+        _model.config.label2id = {v: k for k, v in _model.config.id2label.items()}
     return _model
 
 
@@ -99,8 +104,8 @@ def get_task_info(task_name: str):
 
     if not isinstance(tasks, list):
         tasks = [tasks]
-
-    return [TaskInfo.from_dict(t) for t in tasks]
+    output = [TaskInfo.from_dict(t) for t in tasks]
+    return output
 
 
 def get_example_function(

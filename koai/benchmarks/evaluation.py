@@ -1,6 +1,6 @@
 import evaluate
 import numpy as np
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict
 from transformers import PreTrainedTokenizerBase, PreTrainedTokenizerFast
 import nltk
 nltk.download("punkt")
@@ -18,20 +18,21 @@ def postprocess_text(preds, labels, metric='rouge'):
     return preds, labels
 
 def get_metrics(task_type: str, metric_name: str,
-                tokenizer: Optional[PreTrainedTokenizerBase or PreTrainedTokenizerFast]) -> Callable:
-    if task_type == "token_classification":
+                tokenizer: Optional[PreTrainedTokenizerBase or PreTrainedTokenizerFast],
+                id2label: Optional[Dict[int, str]] = None) -> Callable:
+    if task_type == "token-classification":
         _metric = evaluate.load(metric_name)
 
         def compute_metrics(p):
             preds, labels = p
             preds = np.argmax(preds, axis=-1)
             true_predictions = [
-                [p for (p, l) in zip(pred, label) if l != -100]
+                [id2label[p] for (p, l) in zip(pred, label) if l != -100]
                 for pred, label in zip(preds, labels)
             ]
 
             true_labels = [
-                [l for (p, l) in zip(prediction, label) if l != -100]
+                [id2label[l] for (p, l) in zip(prediction, label) if l != -100]
                 for prediction, label in zip(preds, labels)
             ]
 
