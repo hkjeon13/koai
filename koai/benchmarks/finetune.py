@@ -46,6 +46,8 @@ def finetune(
 
     models_for_return = []
     for info in infolist:
+        if info.extra_options.get("has_special_tokens"):
+            tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["add_special_tokens"]})
         dataset = load_dataset(*info.task)
         dataset = dataset.map(info.preprocess_function, batched=True)
         example_function = get_example_function(
