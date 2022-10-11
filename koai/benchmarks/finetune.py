@@ -1,6 +1,4 @@
-from collections import OrderedDict
 from inspect import signature
-from typing import List, Optional
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer, PreTrainedModel, logging
 from .finetune_utils import (
@@ -16,8 +14,60 @@ from .finetune_utils import (
 
 
 import os
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
+from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
+from typing import List, Optional, Union
+import json
+import re
+import os
 
 logger = logging.get_logger(__file__)
+
+
+def load_json(path: str, encoding:str = 'utf-8') -> Union[dict, list]:
+    with open(path, 'r', encoding=encoding) as r:
+        return json.load(r)
+
+
+def write_json(path: str, content: Union[dict, list], encoding:str = 'utf-8') -> None:
+    with open(path, 'w', encoding=encoding) as w:
+        json.dump(content, w)
+
+def write_text(path: str, content: str, encoding:str = 'utf-8') -> None:
+    with open(path, 'w', encoding=encoding) as w:
+        w.write(content)
+
+_UNUSED = re.compile(r"\[unused[0-9]+\]")
+
+
+def add_special_tokens_to_unused(
+        tokenizer: Union[PreTrainedTokenizerBase, PreTrainedTokenizerFast],
+        special_tokens: List[str],
+        save_path: str = '.cache/') -> Union[PreTrainedTokenizerBase, PreTrainedTokenizerFast]:
+
+    unused_tokens = sorted([(k, v) for k, v in tokenizer.vocab.items() if _UNUSED.match(k)], key=lambda x: x[1])
+    vocab = tokenizer.vocab.copy()
+    tokenizer.save_pretrained(save_path)
+    vocab_json = load_json(os.path.join(save_path, 'tokenizer.json'))
+    if unused_tokens:
+        for spt in special_tokens:
+            unu, num = unused_tokens.pop(0)
+            del vocab[unu]
+            del vocab_json["model"]["vocab"][unu]
+            vocab[spt] = num
+            vocab_json["model"]["vocab"][spt] = num
+
+    ordered_vocab = [k for k, v in sorted(list(vocab.items()), key=lambda x: x[1])]
+
+    write_text(os.path.join(save_path, "vocab.txt"), "\n".join(ordered_vocab))
+    write_json(os.path.join(save_path, "tokenizer.json"), vocab_json)
+
+    tokenizer = tokenizer.from_pretrained(save_path)
+    tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+
+    tokenizer.save_pretrained(save_path)
+    return tokenizer
+
 
 def get_dataset_columns(dataset:DatasetDict):
     columns = []
@@ -36,6 +86,7 @@ def finetune(
         return_models: bool = False,
         output_dir: str = "runs/",
         finetune_model_across_the_tasks: bool = False,
+        add_sp_tokens_to_unused:bool = True,
         *args, **kwargs) -> PreTrainedModel:
 
     infolist = custom_task_infolist
@@ -46,8 +97,12 @@ def finetune(
 
     models_for_return = []
     for info in infolist:
-        if info.extra_options.get("has_special_tokens"):
-            tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
+        has_sp_tokens = info.extra_options.get("has_special_tokens")
+        if has_sp_tokens:
+            if add_sp_tokens_to_unused:
+                tokenizer = add_special_tokens_to_unused(tokenizer, info.extra_options["additional_special_tokens"])
+            else:
+                tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
         dataset = load_dataset(*info.task)
         dataset = dataset.map(info.preprocess_function, batched=True)
         example_function = get_example_function(
@@ -70,6 +125,8 @@ def finetune(
 
         data_collator = data_collator(**params)
         model = get_model(model_name_or_path, info)
+        if has_sp_tokens:
+            model.resize_token_embeddings(len(tokenizer))
         compute_metrics = get_metrics(
             task_type=info.task_type,
             id2label=model.config.id2label,
