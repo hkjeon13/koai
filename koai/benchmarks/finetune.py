@@ -114,4 +114,4 @@ def finetune(
 
 
 if __name__ == "__main__":
-    finetune("klue-ner", "klue/bert-base", do_train=True, do_eval=True)
+    finetune("klue-re", "klue/bert-base", do_train=True, do_eval=True)

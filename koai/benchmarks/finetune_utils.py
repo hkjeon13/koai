@@ -58,6 +58,7 @@ with open(_task_path, "r", encoding='utf-8') as f:
 
 PROCESS_FUNCTIONS_MAP = OrderedDict([
     ("klue-sts", klue_sts_preprocess_function),
+    ("klue-re", klue_re_preprocess_function)
 ])
 
 TASKS = {k: dict(v, **{"preprocess_function": PROCESS_FUNCTIONS_MAP.get(k)}) for k, v in TASKS.items()}
