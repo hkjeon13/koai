@@ -1,3 +1,3 @@
-import .benchmarks
+from .benchmarks import finetune
 
-__all__ = ["benchmarks"]
+__all__ = ["finetune"]
