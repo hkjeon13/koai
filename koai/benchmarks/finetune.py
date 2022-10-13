@@ -138,6 +138,8 @@ def finetune(
 
         traininig_args_params = list(signature(traininig_args).parameters.keys())
         traininig_args_params = {arg: kwargs[arg] for arg in traininig_args_params if arg in kwargs}
+        if "optim" not in traininig_args_params:
+            traininig_args_params["optim"] = "adamw_torch"
 
         traininig_args = traininig_args(
             output_dir=output_dir,
