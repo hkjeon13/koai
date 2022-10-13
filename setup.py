@@ -20,7 +20,7 @@ setup(
 
     python_requires=">=3",
 
-    packages=["koai"],
+    packages=find_packages("koai"),
     include_package_data=True,
     install_requires=[
             "transformers",
