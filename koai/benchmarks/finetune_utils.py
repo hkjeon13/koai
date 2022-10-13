@@ -162,7 +162,6 @@ def get_example_function(
         label_all_tokens = extra_options.get("label_all_tokens", False)
         b_to_i_label = extra_options.get("extra_options", [])
         label2id = {name: i for i, name in enumerate(extra_options["label_names"])}
-        print("label2id:", label2id)
 
         def example_function(examples):
             tokenized_inputs = tokenizer(
