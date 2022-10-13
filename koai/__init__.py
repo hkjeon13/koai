@@ -1,2 +1,2 @@
-import benchmarks
+import .benchmarks
 __all__ = ["benchmarks" ]
