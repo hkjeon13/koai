@@ -90,6 +90,8 @@ def finetune(
         add_sp_tokens_to_unused: bool = True,
         *args, **kwargs) -> PreTrainedModel:
 
+    # TODO: finetune_model_across_the_tasks 구현.
+    # TODO: apply label names in Trainer or TrainingArguments for Dependency Parsing
     infolist = custom_task_infolist
     if infolist is None:
         infolist = get_task_info(task_name=task_name)
@@ -146,6 +148,7 @@ def finetune(
 
         traininig_args = traininig_args(
             output_dir=output_dir,
+            label_names=["head_labels", "dp_labels"] if info.task_type == "dependency-parsing" else None,
             **traininig_args_params,
         )
 

@@ -2,7 +2,7 @@ import os
 import re
 import json
 from dataclasses import dataclass, field
-from typing import Tuple, Union, Optional, Callable
+from typing import Tuple, Union, Optional, Callable, Dict
 from .evaluation import get_metrics
 from .preprocess import *
 from .modeling_dp import AutoModelForDependencyParsing
@@ -72,7 +72,7 @@ class TaskInfo:
     task: Tuple[str, str]
     task_type: str
     text_column: str
-    label_column: str
+    label_column: Union[str, Dict[str, str]]
     num_labels: int = 2
     text_pair_column: Optional[str] = None
     train_split: str = "train"
@@ -134,7 +134,7 @@ def get_example_function(
                 is_split_into_words=info.is_split_into_words,
             )
             labels = []
-            for i, label in enumerate(examples["ner_tags"]):
+            for i, label in enumerate(examples[info.label_column]):
                 word_ids = tokenized_inputs.word_ids(batch_index=i)
                 previous_word_idx = None
                 label_ids = []
@@ -151,6 +151,47 @@ def get_example_function(
                     previous_word_idx = word_idx
                 labels.append(label_ids)
             tokenized_inputs["labels"] = labels
+            return tokenized_inputs
+
+    elif info.task_type == "dependency-parsing":
+        if not isinstance(info.label_column, dict):
+            raise ValueError("For Dependency Parsing, 'label_colmn' should be constructed as {'head':<head_name>, 'dependency':<dependency_relations>}")
+
+        deprels, heads = info.label_column["dependency"], info.label_column["head"]
+        extra_options = info.extra_options
+        label_all_tokens = extra_options.get("label_all_tokens", False)
+        b_to_i_label = extra_options.get("extra_options", [])
+        label2id = {name: i for i, name in enumerate(extra_options["label_names"])}
+
+        def example_function(examples):
+            tokenized_inputs = tokenizer(
+                examples["word_form"],
+                padding="max_length",
+                truncation=True,
+                max_length=max_source_length,
+                is_split_into_words=True,
+            )
+
+            labels_head, labels_dp = [], []
+            for i, (label_dp, label_head) in enumerate(zip(deprels, heads)):
+                word_ids = tokenized_inputs.word_ids(batch_index=i)
+                previous_word_idx = None
+                _label_dp, _label_head = [], []
+                for word_idx in word_ids:
+                    if word_idx is None:
+                        _label_dp.append(-100)
+                        _label_head.append(-100)
+                    elif word_idx != previous_word_idx:
+                        _label_dp.append(label2id[label_dp[word_idx]])
+                        _label_head.append(label_head[word_idx])
+                    else:
+                        _label_dp.append(-100)
+                        _label_head.append(-100)
+                    previous_word_idx = word_idx
+                labels_head.append(_label_head)
+                labels_dp.append(_label_dp)
+            tokenized_inputs["head_labels"] = labels_head
+            tokenized_inputs["dp_labels"] = labels_dp
             return tokenized_inputs
     else:
         def example_function(examples):

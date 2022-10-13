@@ -57,6 +57,7 @@ def get_metrics(task_type: str, metric_name: str,
             else:
                 results = _metric.compute(predictions=preds, references=labels)
             return results
+
     elif task_type in ("conditional-generation", "sequence-to-sequence"):
         def compute_metrics(p):
             preds, labels = p
@@ -78,5 +79,35 @@ def get_metrics(task_type: str, metric_name: str,
             result["gen_len"] = np.mean(prediction_lens)
             result = {k: round(v, 4) for k, v in result.items()}
             return result
+
+    if task_type == "dependency-parsing":
+        def compute_metrics(p):
+            (preds_head, preds_dp), (labels_head, labels_dp) = p
+            preds_head = np.argmax(preds_head, axis=-1)
+            preds_dp = np.argmax(preds_dp, axis=-1)
+
+            score_head = [
+                [p == l for (p, l) in zip(pred, label) if l != -100]
+                for pred, label in zip(preds_head, labels_head)
+            ]
+
+            score_dp = [
+                [p == l for (p, l) in zip(pred, label) if l != -100]
+                for pred, label in zip(preds_dp, labels_dp)
+            ]
+
+            uas = [
+                sum(seq) / len(seq) for seq in score_head
+            ]
+
+            las = [
+                sum([h and d for h, d in zip(head, dp)]) / len(head)
+                for head, dp in zip(score_head, score_dp)
+            ]
+
+            return {
+                "UAS": sum(uas) / len(uas),
+                "LAS": sum(las) / len(las),
+            }
 
     return compute_metrics
