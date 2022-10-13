@@ -90,12 +90,12 @@ class TaskInfo:
         return TaskInfo(**info)
 
 
-def get_model(model_name_or_path: str, info: TaskInfo) -> PreTrainedModel:
-    _model = MODEL_CONFIG.get(info.task_type).from_pretrained(model_name_or_path, num_labels=info.num_labels)
+def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length:int) -> PreTrainedModel:
+    _model = MODEL_CONFIG.get(info.task_type).from_pretrained(model_name_or_path, num_labels=info.num_labels, max_seq_length=max_seq_length, num_relations=info.num_labels)
     if _model is None:
         raise FileExistsError(f"Can't find any model matching '{model_name_or_path}' on huggingface hub or local directory.")
     label_names = info.extra_options.get("label_names")
-    if info.task_type == "token-classification" and label_names:
+    if info.task_type in ("token-classification", "dependency-parsing") and label_names:
         _model.config.id2label = {i: l for i, l in enumerate(label_names)}
         _model.config.label2id = {v: k for k, v in _model.config.id2label.items()}
     return _model
