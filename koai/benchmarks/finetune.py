@@ -91,7 +91,6 @@ def finetune(
         *args, **kwargs) -> PreTrainedModel:
 
     # TODO: finetune_model_across_the_tasks 구현.
-    # TODO: apply label names in Trainer or TrainingArguments for Dependency Parsing
     infolist = custom_task_infolist
     if infolist is None:
         infolist = get_task_info(task_name=task_name)
