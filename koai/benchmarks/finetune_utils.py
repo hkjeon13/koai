@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Tuple, Union, Optional, Callable
 from .evaluation import get_metrics
 from .preprocess import *
+from .modeling_dp import AutoModelForDependencyParsing
 from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForTokenClassification,
@@ -44,7 +45,9 @@ MODEL_CONFIG = OrderedDict([
     ('question-answering', AutoModelForQuestionAnswering),
     ('masked-language-modeling', AutoModelForMaskedLM),
     ('causal-language-modeling', AutoModelForCausalLM),
-    ('sequence-to-sequence', AutoModelForSeq2SeqLM)
+    ('sequence-to-sequence', AutoModelForSeq2SeqLM),
+    ('dependency-parsing', AutoModelForDependencyParsing),
+
 ])
 
 

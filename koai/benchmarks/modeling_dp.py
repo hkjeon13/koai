@@ -1,14 +1,14 @@
+import torch
 import logging
-from transformers import BertPreTrainedModel, BertModel, PretrainedConfig, AutoConfig
+from torch import nn
 from dataclasses import dataclass
 from collections import OrderedDict
-from transformers.models.bert.modeling_bert import ModelOutput
-from typing import Optional, Tuple, Union
-from transformers.models.auto.auto_factory import _BaseAutoModelClass, _LazyAutoMapping
-import torch
-from torch import nn
 from torch.nn import CrossEntropyLoss
-from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
+from typing import Optional, Tuple, Union
+
+from transformers import BertPreTrainedModel, BertModel, PretrainedConfig, AutoConfig
+from transformers.models.bert.modeling_bert import ModelOutput
+
 
 logger = logging.getLogger(__file__)
 
@@ -103,7 +103,7 @@ MODEL_FOR_DEPENDENCY_PARSING_MAPPING = OrderedDict(
 )
 
 
-class AutoModelForDependencyParsing(_BaseAutoModelClass):
+class AutoModelForDependencyParsing:
     @classmethod
     def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
         config = kwargs.pop("config", None)
@@ -132,7 +132,6 @@ class AutoModelForDependencyParsing(_BaseAutoModelClass):
         return model_class.from_pretrained(
             pretrained_model_name_or_path, *model_args, config=config, **hub_kwargs, **kwargs
         )
-
 
 
 if __name__ =="__main__":
