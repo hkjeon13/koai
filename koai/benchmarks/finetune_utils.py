@@ -162,6 +162,7 @@ def get_example_function(
         label_all_tokens = extra_options.get("label_all_tokens", False)
         b_to_i_label = extra_options.get("extra_options", [])
         label2id = {name: i for i, name in enumerate(extra_options["label_names"])}
+        print("label2id:", label2id)
 
         def example_function(examples):
             tokenized_inputs = tokenizer(
@@ -173,7 +174,7 @@ def get_example_function(
             )
 
             labels_head, labels_dp = [], []
-            for i, (label_dp, label_head) in enumerate(zip(deprels, heads)):
+            for i, (label_dp, label_head) in enumerate(zip(examples[deprels], examples[heads])):
                 word_ids = tokenized_inputs.word_ids(batch_index=i)
                 previous_word_idx = None
                 _label_dp, _label_head = [], []
