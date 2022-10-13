@@ -126,7 +126,7 @@ def finetune(
 
         data_collator = data_collator(**params)
 
-        model = get_model(model_name_or_path, info)
+        model = get_model(model_name_or_path, info, max_source_length)
         if has_sp_tokens:
             model.resize_token_embeddings(len(tokenizer))
 
