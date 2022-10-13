@@ -1,2 +1,3 @@
 import .benchmarks
-__all__ = ["benchmarks" ]
+
+__all__ = ["benchmarks"]
