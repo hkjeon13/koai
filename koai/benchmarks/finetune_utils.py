@@ -52,7 +52,7 @@ TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_col
               "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words"]
 
 
-_task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/benchmarks.json")
+_task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmarks.json")
 with open(_task_path, "r", encoding='utf-8') as f:
     TASKS = json.load(f)
 
