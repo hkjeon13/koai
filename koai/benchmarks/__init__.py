@@ -1,3 +1,1 @@
-from finetune import finetune
-
-__all__ = ["finetune"]
+from .finetune import finetune
