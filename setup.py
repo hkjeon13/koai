@@ -10,7 +10,7 @@ setup(
     description='Korean AI Project',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/hkjeon13/KorAI",
+    url="https://github.com/hkjeon13/koai",
     author="Eddie",
     author_email="hkjeo13@gmail.com",
     zip_safe=False,
