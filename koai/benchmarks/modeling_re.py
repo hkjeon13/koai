@@ -8,6 +8,8 @@ from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
 from transformers.modeling_outputs import SequenceClassifierOutput
 from transformers.models.bert.modeling_bert import BertPooler
 
+
+# not yet - Now it is just concept!!
 class BertForRelationExtraction(BertPreTrainedModel):
     def __init__(self, config):
 
@@ -28,7 +30,7 @@ class BertForRelationExtraction(BertPreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    def set_subject_object_maps(self, mapping_dict:dict):
+    def set_subject_object_maps(self, mapping_dict: dict):
         self.subject_maps = mapping_dict.get("subject")
         self.object_maps = mapping_dict.get("object")
 
