@@ -1,6 +1,3 @@
-from collections import OrderedDict
-
-
 def default_preprocess_function(examples):
     return examples
 
@@ -34,7 +31,12 @@ def klue_re_preprocess_function(examples, apply_type_tag=False,
 
 if __name__ == "__main__":
     from datasets import load_dataset
-
+    from functools import partial
     dataset = load_dataset("klue", 're', split="train")
-    dataset = dataset.map(klue_re_preprocess_function, batched=True)
+    example_function = partial(
+        klue_re_preprocess_function,
+#        sub_token=" <sub> ", unsub_token=" </sub> ", obj_token=" <obj> ", unobj_token=" </obj> "
+        sub_token = " <tag> ", unsub_token = " </tag> ", obj_token = " <tag> ", unobj_token = " </tag> "
+    )
+    dataset = dataset.map(example_function, batched=True)
     print(next(iter(dataset)))
