@@ -193,6 +193,71 @@ def get_example_function(
             tokenized_inputs["head_labels"] = labels_head
             tokenized_inputs["dp_labels"] = labels_dp
             return tokenized_inputs
+
+    elif info.task_type == "question-answering":
+        pad_on_right = tokenizer.padding_side == "right"
+        text_column = info.text_column if pad_on_right else info.text_pair_column
+        text_pair_column = info.text_column if pad_on_right else info.text_pair_column
+        doc_stride = info.extra_options.get("doc_stride", 0)
+
+        def example_function(examples):
+            tokenized_inputs = tokenizer(
+                examples.get(text_column),
+                examples.get(text_pair_column),
+                truncation="only_second" if pad_on_right else "only_first",
+                stride=doc_stride,
+                max_length=max_source_length,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+                padding="max_length"
+            )
+
+            sample_mapping = tokenized_inputs.pop("overflow_to_sample_mapping")
+            offset_mapping = tokenized_inputs.pop("offset_mapping")
+            tokenized_inputs["start_positions"] = []
+            tokenized_inputs["end_positions"] = []
+            for i, offsets in enumerate(offset_mapping):
+                input_ids = tokenized_inputs["input_ids"][i]
+                cls_index = input_ids.index(tokenizer.cls_token_id)
+                sequence_ids = tokenized_inputs.sequence_ids(i)
+                sample_index = sample_mapping[i]
+                answers = examples[answers][sample_index]
+
+                if len(answers["answer_start"]) == 0:
+                    tokenized_inputs["start_positions"].append(cls_index)
+                    tokenized_inputs["end_positions"].append(cls_index)
+                else:
+                    # Start/end character index of the answer in the text.
+                    start_char = answers["answer_start"][0]
+                    end_char = start_char + len(answers["text"][0])
+
+                    # Start token index of the current span in the text.
+                    token_start_index = 0
+                    while sequence_ids[token_start_index] != (1 if pad_on_right else 0):
+                        token_start_index += 1
+
+                    # End token index of the current span in the text.
+                    token_end_index = len(input_ids) - 1
+                    while sequence_ids[token_end_index] != (1 if pad_on_right else 0):
+                        token_end_index -= 1
+
+                    if not (offsets[token_start_index][0] <= start_char and offsets[token_end_index][1] >= end_char):
+                        tokenized_inputs["start_positions"].append(cls_index)
+                        tokenized_inputs["end_positions"].append(cls_index)
+                    else:
+                        # Otherwise move the token_start_index and token_end_index to the two ends of the answer.
+                        # Note: we could go after the last offset if the answer is the last word (edge case).
+                        while token_start_index < len(offsets) and offsets[token_start_index][0] <= start_char:
+                            token_start_index += 1
+                        tokenized_inputs["start_positions"].append(token_start_index - 1)
+
+                        while offsets[token_end_index][1] >= end_char:
+                            token_end_index -= 1
+                        tokenized_inputs["end_positions"].append(token_end_index + 1)
+
+            return tokenized_inputs
+
+
     else:
         def example_function(examples):
             tokenized_inputs = tokenizer(
