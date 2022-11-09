@@ -14,6 +14,7 @@ def postprocess_qa_predictions(
     examples,
     features,
     predictions: Tuple[np.ndarray, np.ndarray],
+    id_column:str,
     version_2_with_negative: bool = False,
     n_best_size: int = 20,
     max_answer_length: int = 30,
