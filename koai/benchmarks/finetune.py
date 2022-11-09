@@ -97,9 +97,10 @@ def finetune(
         infolist = get_task_info(task_name=task_name)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
-
+    model = None
     models_for_return = []
     for info in infolist:
+        _path = os.path.join(output_dir, trim_task_name(task_name))
         has_sp_tokens = info.extra_options.get("has_special_tokens")
         if has_sp_tokens:
             if add_sp_tokens_to_unused:
@@ -127,6 +128,8 @@ def finetune(
             params['tokenizer'] = tokenizer
 
         data_collator = data_collator(**params)
+        if finetune_model_across_the_tasks and model is not None:
+            model_name_or_path = _path
 
         model = get_model(model_name_or_path, info, max_source_length)
         if has_sp_tokens:
@@ -164,7 +167,7 @@ def finetune(
             compute_metrics=compute_metrics,
             data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
-            eval_dataset=dataset.get(info.eval_split).select(range(100)),
+            eval_dataset=dataset.get(info.eval_split),
             **other_params
         )
 
@@ -175,8 +178,7 @@ def finetune(
             eval_result = trainer.evaluate()
             print(eval_result)
 
-        if save_model:
-            _path = os.path.join(output_dir, trim_task_name(task_name))
+        if save_model or finetune_model_across_the_tasks:
             trainer.save_model(output_dir=_path)
 
         if return_models:
