@@ -160,7 +160,7 @@ def finetune(
             compute_metrics=compute_metrics,
             data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
-            eval_dataset=dataset.get(info.eval_split),
+            eval_dataset=dataset.get(info.eval_split).select(range(100)),
             **other_params
         )
 
