@@ -1,9 +1,8 @@
-from .finetune_utils import TaskInfo
 from transformers import EvalPrediction
 from .utils_qa import postprocess_qa_predictions
 
 
-def mrc_post_processing_function(examples, features, predictions, info: TaskInfo,
+def mrc_post_processing_function(examples, features, predictions, info,
                              log_level: str = "passive",
                              output_dir: str = "runs/", stage: str = "eval/"):
     # Post-processing: we match the start logits and end logits to answers in the original context.
