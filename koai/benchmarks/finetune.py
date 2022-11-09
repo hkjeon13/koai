@@ -153,7 +153,7 @@ def finetune(
         params = list(signature(trainer.__init__).parameters.keys())
         other_params = {}
         if "post_process_function" in params:
-            other_params["postprocess_function"] = info.postprocess_function
+            other_params["post_process_function"] = info.postprocess_function
         trainer = trainer(
             model=model,
             args=traininig_args,
