@@ -9,6 +9,7 @@ from .evaluation import get_metrics
 from .preprocess import *
 from .postprocess import *
 from .modeling_dp import AutoModelForDependencyParsing
+from .trainer_qa import QuestionAnsweringTrainer
 from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForTokenClassification,
@@ -55,7 +56,7 @@ MODEL_CONFIG = OrderedDict([
 
 
 TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name", "extra_options",
-              "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words", "id_column"]
+              "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words", "id_column", "postprocess_function"]
 
 
 _task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmarks.json")
@@ -68,7 +69,7 @@ PREPROCESS_FUNCTIONS_MAP = OrderedDict([
 ])
 
 POSTPROCESS_FUNCTIONS_MAP = OrderedDict([
-    ("klue-mrc", mrc_post_processing_function),
+    ("klue-mrc", get_mrc_post_processing_function ),
 ])
 
 TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k),
@@ -315,6 +316,8 @@ def get_example_function(
 def get_trainer(task_type: str):
     if task_type == "sequence-to-sequence":
         return Seq2SeqTrainingArguments, Seq2SeqTrainer
+    elif task_type == "question-answering":
+        return TrainingArguments, QuestionAnsweringTrainer
     else:
         return TrainingArguments, Trainer
 
@@ -330,4 +333,4 @@ def trim_task_name(name:str):
 
 
 if __name__ == "__main__":
-    print(PROCESS_FUNCTIONS_MAP.get("klue-sts", default_preprocess_function))
+    print(PREPROCESS_FUNCTIONS_MAP.get("klue-sts", default_preprocess_function))

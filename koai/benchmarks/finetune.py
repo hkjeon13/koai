@@ -11,6 +11,7 @@ from .finetune_utils import (
     trim_task_name,
     get_metrics
 )
+from .postprocess import get_mrc_post_processing_function
 
 
 import os
@@ -96,9 +97,10 @@ def finetune(
         infolist = get_task_info(task_name=task_name)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
-
+    model = None
     models_for_return = []
     for info in infolist:
+        _path = os.path.join(output_dir, trim_task_name(task_name))
         has_sp_tokens = info.extra_options.get("has_special_tokens")
         if has_sp_tokens:
             if add_sp_tokens_to_unused:
@@ -116,6 +118,7 @@ def finetune(
         )
 
         _rm_columns = get_dataset_columns(dataset)
+        eval_examples = dataset.get(info.eval_split)
         dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
         data_collator = get_data_collator(task_type=info.task_type)
 
@@ -125,6 +128,8 @@ def finetune(
             params['tokenizer'] = tokenizer
 
         data_collator = data_collator(**params)
+        if finetune_model_across_the_tasks and model is not None:
+            model_name_or_path = _path
 
         model = get_model(model_name_or_path, info, max_source_length)
         if has_sp_tokens:
@@ -150,6 +155,11 @@ def finetune(
             label_names=["head_labels", "dp_labels"] if info.task_type == "dependency-parsing" else None,
             **traininig_args_params,
         )
+        params = list(signature(trainer.__init__).parameters.keys())
+        other_params = {}
+        if "post_process_function" in params and info.task_type == "question-answering":
+            other_params["post_process_function"] = get_mrc_post_processing_function(info, output_dir=output_dir)
+            other_params["eval_examples"] = eval_examples if kwargs.get("do_eval") else None
 
         trainer = trainer(
             model=model,
@@ -158,7 +168,7 @@ def finetune(
             data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
             eval_dataset=dataset.get(info.eval_split),
-            post_process_function=info.post_processing_function,
+            **other_params
         )
 
         if kwargs.get("do_train", False):
@@ -168,8 +178,7 @@ def finetune(
             eval_result = trainer.evaluate()
             print(eval_result)
 
-        if save_model:
-            _path = os.path.join(output_dir, trim_task_name(task_name))
+        if save_model or finetune_model_across_the_tasks:
             trainer.save_model(output_dir=_path)
 
         if return_models:
