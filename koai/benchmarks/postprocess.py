@@ -31,6 +31,6 @@ def get_mrc_post_processing_function(
         else:
             formatted_predictions = [{"id": k, "prediction_text": v} for k, v in predictions.items()]
 
-        references = [{"id": ex[info.id_column], "answers": ex[info.id_column]} for ex in examples]
+        references = [{"id": ex[info.id_column], "answers": ex[info.label_column]} for ex in examples]
         return EvalPrediction(predictions=formatted_predictions, label_ids=references)
     return process_function
