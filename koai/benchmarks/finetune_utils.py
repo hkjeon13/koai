@@ -7,6 +7,7 @@ from collections import OrderedDict
 from typing import Tuple, Union, Optional, Callable, Dict
 from .evaluation import get_metrics
 from .preprocess import *
+from .postprocess import *
 from .modeling_dp import AutoModelForDependencyParsing
 from transformers import (
     AutoModelForSequenceClassification,
@@ -61,12 +62,18 @@ _task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmark
 with open(_task_path, "r", encoding='utf-8') as f:
     TASKS = json.load(f)
 
-PROCESS_FUNCTIONS_MAP = OrderedDict([
+PREPROCESS_FUNCTIONS_MAP = OrderedDict([
     ("klue-sts", klue_sts_preprocess_function),
     ("klue-re", klue_re_preprocess_function)
 ])
 
-TASKS = {k: dict(v, **{"preprocess_function": PROCESS_FUNCTIONS_MAP.get(k)}) for k, v in TASKS.items()}
+POSTPROCESS_FUNCTIONS_MAP = OrderedDict([
+    ("klue-mrc", mrc_post_processing_function),
+])
+
+TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k),
+                       "postprocess_function": POSTPROCESS_FUNCTIONS_MAP.get(k)})
+         for k, v in TASKS.items()}
 
 
 @dataclass
@@ -84,6 +91,8 @@ class TaskInfo:
     extra_options: dict = field(default_factory=dict)
     is_split_into_words: bool = False
     preprocess_function: Optional[Callable] = None
+    postprocess_function: Optional[Callable] = None
+
     @classmethod
     def from_dict(cls, data: dict) -> None:
         info = {k: data.get(k) for k in TASK_ATTRS}

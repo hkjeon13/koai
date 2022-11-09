@@ -158,6 +158,7 @@ def finetune(
             data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
             eval_dataset=dataset.get(info.eval_split),
+            post_process_function=info.post_processing_function,
         )
 
         if kwargs.get("do_train", False):
