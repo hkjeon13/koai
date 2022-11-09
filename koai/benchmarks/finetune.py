@@ -11,6 +11,7 @@ from .finetune_utils import (
     trim_task_name,
     get_metrics
 )
+from .postprocess import get_mrc_post_processing_function
 
 
 import os
@@ -152,8 +153,8 @@ def finetune(
         )
         params = list(signature(trainer.__init__).parameters.keys())
         other_params = {}
-        if "post_process_function" in params:
-            other_params["post_process_function"] = info.postprocess_function
+        if "post_process_function" in params and info.task_type == "question-answering":
+            other_params["post_process_function"] = get_mrc_post_processing_function(info, output_dir=output_dir)
         trainer = trainer(
             model=model,
             args=traininig_args,
