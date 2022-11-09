@@ -150,7 +150,10 @@ def finetune(
             label_names=["head_labels", "dp_labels"] if info.task_type == "dependency-parsing" else None,
             **traininig_args_params,
         )
-
+        params = list(signature(trainer.__init__).parameters.keys())
+        other_params = {}
+        if "post_process_function" in params:
+            other_params["post_process_function"] = info.postprocess_function
         trainer = trainer(
             model=model,
             args=traininig_args,
@@ -158,7 +161,7 @@ def finetune(
             data_collator=data_collator,
             train_dataset=dataset.get(info.train_split),
             eval_dataset=dataset.get(info.eval_split),
-            post_process_function=info.post_processing_function,
+            **other_params
         )
 
         if kwargs.get("do_train", False):

@@ -1,6 +1,6 @@
-from finetune_utils import TaskInfo
+from .finetune_utils import TaskInfo
 from transformers import EvalPrediction
-from utils_qa import postprocess_qa_predictions
+from .utils_qa import postprocess_qa_predictions
 
 
 def mrc_post_processing_function(examples, features, predictions, info: TaskInfo,
