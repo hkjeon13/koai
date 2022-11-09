@@ -6,11 +6,6 @@
 $ pip install koai
 ```
 
-(develop version)
-```
-$ pip install git+https://github.com/hkjeon13/koai.git@develop
-```
-
 
 ## FineTuning
 
