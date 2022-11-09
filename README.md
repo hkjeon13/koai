@@ -54,3 +54,12 @@ finetune(
 
 - add_sp_tokens_to_unused:bool, 과제에서 special_token 을 unused 토큰과 대치할 지를 설정합니다.
 
+(그 밖에 허깅페이스의 transformers.TrainingArguments 의 모든 인자를 입력할 수 있습니다.)
+
+
+## Issue
+
+---
+
+-  현재 개발 중에 있는 프로젝트입니다. 향후 벤치마크가 추가될 예정입니다.
+-  소스의 많은 부분들이, https://github.com/huggingface/transformers/ 를 참고 및 인용하여 제작되었습니다.
