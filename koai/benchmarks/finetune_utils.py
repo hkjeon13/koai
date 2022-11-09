@@ -69,7 +69,7 @@ PREPROCESS_FUNCTIONS_MAP = OrderedDict([
 ])
 
 POSTPROCESS_FUNCTIONS_MAP = OrderedDict([
-    ("klue-mrc", mrc_post_processing_function),
+    ("klue-mrc", get_mrc_post_processing_function ),
 ])
 
 TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k),
