@@ -1,9 +1,10 @@
 from transformers import EvalPrediction
 from .utils_qa import postprocess_qa_predictions
-
-def get_mrc_post_processing_function(info,
-                             log_level: str = "passive",
-                             output_dir: str = "runs/", stage: str = "eval/"):
+import logging
+def get_mrc_post_processing_function(
+        info, log_level: str = logging.WARNING,
+        output_dir: str = "runs/", stage: str = "eval/"
+):
     # Post-processing: we match the start logits and end logits to answers in the original context.
     options = info.extra_options
     def process_function(examples, features, predictions):
