@@ -30,3 +30,27 @@ finetune(
     logging_strategy="epoch"
 )
 ```
+- task_name: str, 과제의 이름을 설정합니다(klue 전체를 테스트 하려면, "klue". 특정 테스크를 선택하려면 "klue-mrc"와 같이 입력해주세요. "mrc"와 같은 하위 테스크 이름은 허깅페이스 허브를 따릅니다.)
+
+- model_name_or_path: str, 모델의 허깅페이스 허브 이름 또는 로컬 경로를 입력해 주세요.
+
+- remove_columns: bool = True, 데이터 로드 후 모델 입력을 위한 프로세스 완료 후 기존 컬럼 이름을 삭제할지 여부를 설정합니다.
+
+- custom_task_infolist: Optional[List[TaskInfo]] = None, 직접 TaskInfo 클래스를 설정하고 이를 리스트 안에 넣어 벤치마크 테스트를 할 수 있습니다.
+
+- max_source_length: int = 512, 입력 텍스트의 최대 길이를 설정합니다.
+
+- max_target_length: Optional[int] = None, (만약 있다면) 출력 텍스트의 최대 길이를 설정합니다.
+
+- padding: str = "longest", padding의 방법을 설정합니다(`transformers.PretrainedTokenizerBase.__call__`의 'padding'인자와 동일합니다).
+
+- save_model: bool = False, 모델을 내부에 저장할 지 여부를 설정합니다.
+
+- return_models: bool = False, 함수가 학습된 모델을 반환할지 여부를 설정합니다.
+
+- output_dir: str = "runs/", (save_model=True일 때), 저장할 디렉토리를 설정합니다.
+
+- finetune_model_across_the_tasks: bool = False, 모델을 입력 받은 여러 벤치마크에 대해서 조정 학습 시, 초기화 할지를 설정합니다(True면 하나의 모델이 여러 벤치마크에 대하여 학습합니다).
+
+- add_sp_tokens_to_unused:bool, 과제에서 special_token 을 unused 토큰과 대치할 지를 설정합니다.
+
