@@ -1,7 +1,9 @@
 import os
 import re
 import json
+from inspect import signature
 from dataclasses import dataclass, field
+from collections import OrderedDict
 from typing import Tuple, Union, Optional, Callable, Dict
 from .evaluation import get_metrics
 from .preprocess import *
@@ -52,7 +54,7 @@ MODEL_CONFIG = OrderedDict([
 
 
 TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name", "extra_options",
-              "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words"]
+              "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words", "id_column"]
 
 
 _task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmarks.json")
@@ -71,6 +73,7 @@ TASKS = {k: dict(v, **{"preprocess_function": PROCESS_FUNCTIONS_MAP.get(k)}) for
 class TaskInfo:
     task: Tuple[str, str]
     task_type: str
+    id_column: str
     text_column: str
     label_column: Union[str, Dict[str, str]]
     num_labels: int = 2
@@ -81,7 +84,6 @@ class TaskInfo:
     extra_options: dict = field(default_factory=dict)
     is_split_into_words: bool = False
     preprocess_function: Optional[Callable] = None
-
     @classmethod
     def from_dict(cls, data: dict) -> None:
         info = {k: data.get(k) for k in TASK_ATTRS}
@@ -90,8 +92,21 @@ class TaskInfo:
         return TaskInfo(**info)
 
 
-def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length:int) -> PreTrainedModel:
-    _model = MODEL_CONFIG.get(info.task_type).from_pretrained(model_name_or_path, num_labels=info.num_labels, max_seq_length=max_seq_length, num_relations=info.num_labels)
+def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length: int) -> PreTrainedModel:
+    _model = MODEL_CONFIG.get(info.task_type)
+    _params = list(signature(_model.from_pretrained).parameters.keys())
+    params = {}
+    if "max_seq_length" in _params:
+        params["max_seq_length"] = max_seq_length
+    if "num_relation" in _params:
+        params["num_relations"] = info.num_labels
+
+    _model = _model.from_pretrained(
+        model_name_or_path,
+        num_labels=info.num_labels,
+        **params
+    )
+
     if _model is None:
         raise FileExistsError(f"Can't find any model matching '{model_name_or_path}' on huggingface hub or local directory.")
     label_names = info.extra_options.get("label_names")
@@ -197,14 +212,15 @@ def get_example_function(
     elif info.task_type == "question-answering":
         pad_on_right = tokenizer.padding_side == "right"
         text_column = info.text_column if pad_on_right else info.text_pair_column
-        text_pair_column = info.text_column if pad_on_right else info.text_pair_column
+        text_pair_column = info.text_pair_column if pad_on_right else info.text_column
         doc_stride = info.extra_options.get("doc_stride", 0)
-
         def example_function(examples):
+            texts = examples.get(text_column)
+            text_pairs = examples.get(text_pair_column)
             tokenized_inputs = tokenizer(
-                examples.get(text_column),
-                examples.get(text_pair_column),
-                truncation="only_second" if pad_on_right else "only_first",
+                texts,
+                text_pairs,
+                truncation= "only_first" if pad_on_right else "only_second",
                 stride=doc_stride,
                 max_length=max_source_length,
                 return_overflowing_tokens=True,
@@ -213,15 +229,15 @@ def get_example_function(
             )
 
             sample_mapping = tokenized_inputs.pop("overflow_to_sample_mapping")
-            offset_mapping = tokenized_inputs.pop("offset_mapping")
             tokenized_inputs["start_positions"] = []
             tokenized_inputs["end_positions"] = []
-            for i, offsets in enumerate(offset_mapping):
+
+            for i, offsets in enumerate(tokenized_inputs["offset_mapping"]):
                 input_ids = tokenized_inputs["input_ids"][i]
                 cls_index = input_ids.index(tokenizer.cls_token_id)
                 sequence_ids = tokenized_inputs.sequence_ids(i)
                 sample_index = sample_mapping[i]
-                answers = examples[answers][sample_index]
+                answers = examples[info.label_column][sample_index]
 
                 if len(answers["answer_start"]) == 0:
                     tokenized_inputs["start_positions"].append(cls_index)
@@ -254,6 +270,19 @@ def get_example_function(
                         while offsets[token_end_index][1] >= end_char:
                             token_end_index -= 1
                         tokenized_inputs["end_positions"].append(token_end_index + 1)
+
+            tokenized_inputs["example_id"] = []
+            for i in range(len(tokenized_inputs["input_ids"])):
+                sequence_ids = tokenized_inputs.sequence_ids(i)
+                context_index = 1 if pad_on_right else 0
+                sample_index = sample_mapping[i]
+                tokenized_inputs["example_id"].append(
+                    examples[info.id_column][sample_index]
+                )
+                tokenized_inputs["offset_mapping"][i] = [
+                    (o if sequence_ids[k] == context_index else None)
+                    for k, o in enumerate(tokenized_inputs["offset_mapping"][i])
+                ]
 
             return tokenized_inputs
 
