@@ -22,10 +22,11 @@ def get_mrc_post_processing_function(
             prefix=stage,
         )
         # Format the result to the format the metric expects.
-        if options.version_2_with_negative:
+        if options["version_2_with_negative"]:
             formatted_predictions = [
                 {"id": k, "prediction_text": v, "no_answer_probability": 0.0} for k, v in predictions.items()
             ]
+
         else:
             formatted_predictions = [{"id": k, "prediction_text": v} for k, v in predictions.items()]
 
