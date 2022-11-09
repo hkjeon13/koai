@@ -17,9 +17,11 @@ def postprocess_text(preds, labels, metric='rouge'):
         labels = [[label] for label in labels]
     return preds, labels
 
-def get_metrics(task_type: str, metric_name: str,
-                tokenizer: Optional[PreTrainedTokenizerBase or PreTrainedTokenizerFast],
-                id2label: Optional[Dict[int, str]] = None) -> Callable:
+def get_metrics(
+        task_type: str,
+        metric_name: str,
+        tokenizer: Optional[PreTrainedTokenizerBase or PreTrainedTokenizerFast],
+        id2label: Optional[Dict[int, str]] = None) -> Callable:
     if task_type == "token-classification":
         _metric = evaluate.load(metric_name)
 
@@ -80,7 +82,7 @@ def get_metrics(task_type: str, metric_name: str,
             result = {k: round(v, 4) for k, v in result.items()}
             return result
 
-    if task_type == "dependency-parsing":
+    elif task_type == "dependency-parsing":
         def compute_metrics(p):
             (preds_head, preds_dp), (labels_head, labels_dp) = p
             preds_head = np.argmax(preds_head, axis=-1)
@@ -109,5 +111,9 @@ def get_metrics(task_type: str, metric_name: str,
                 "UAS": sum(uas) / len(uas),
                 "LAS": sum(las) / len(las),
             }
+    elif task_type == "question-answering":
+        _metric = evaluate.load(metric_name)
+        def compute_metrics(p):
+            return _metric.compute(predictions=p.predictions, references=p.label_ids)
 
     return compute_metrics
