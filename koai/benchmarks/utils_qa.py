@@ -146,7 +146,7 @@ def postprocess_qa_predictions(
 
         # Only keep the best `n_best_size` predictions.
         predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[:n_best_size]
-
+        print(predictions)
         # Add back the minimum null prediction if it was removed because of its low score.
         if (
             version_2_with_negative
