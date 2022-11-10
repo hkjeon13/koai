@@ -91,9 +91,6 @@ def postprocess_qa_predictions(
             # We grab the predictions of the model for this feature.
             start_logits = all_start_logits[feature_index]
             end_logits = all_end_logits[feature_index]
-            print(start_logits)
-            print(end_logits)
-            raise ValueError
             # This is what will allow us to map some the positions in our logits to span of texts in the original
             # context.
             offset_mapping = features[feature_index]["offset_mapping"]
@@ -114,6 +111,8 @@ def postprocess_qa_predictions(
             # Go through all possibilities for the `n_best_size` greater start and end logits.
             start_indexes = np.argsort(start_logits)[-1 : -n_best_size - 1 : -1].tolist()
             end_indexes = np.argsort(end_logits)[-1 : -n_best_size - 1 : -1].tolist()
+            print("START:::", start_indexes)
+            print("END:::", end_indexes)
             for start_index in start_indexes:
                 for end_index in end_indexes:
                     # Don't consider out-of-scope answers, either because the indices are out of bounds or correspond
