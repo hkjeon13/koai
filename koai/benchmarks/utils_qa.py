@@ -17,7 +17,7 @@ def postprocess_qa_predictions(
     id_column: str,
     version_2_with_negative: bool = False,
     n_best_size: int = 20,
-    max_answer_length: int = 30,
+    max_answer_length: int = 128,
     null_score_diff_threshold: float = 0.0,
     output_dir: Optional[str] = None,
     prefix: Optional[str] = None,
@@ -126,12 +126,10 @@ def postprocess_qa_predictions(
                         continue
                     # Don't consider answers with a length that is either < 0 or > max_answer_length.
                     if end_index < start_index or end_index - start_index + 1 > max_answer_length:
-                        print(f"End Index:{end_index}, Start Index:{start_index}, Max_answer_length:{max_answer_length} ")
                         continue
                     # Don't consider answer that don't have the maximum context available (if such information is
                     # provided).
                     if token_is_max_context is not None and not token_is_max_context.get(str(start_index), False):
-                        print(333333)
                         continue
 
                     prelim_predictions.append(
@@ -142,7 +140,6 @@ def postprocess_qa_predictions(
                             "end_logit": end_logits[end_index],
                         }
                     )
-        print("prelim_predictions:", prelim_predictions)
         if version_2_with_negative and min_null_prediction is not None:
             # Add the minimum null prediction
             prelim_predictions.append(min_null_prediction)
