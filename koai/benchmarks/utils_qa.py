@@ -56,6 +56,8 @@ def postprocess_qa_predictions(
     """
     if len(predictions) != 2:
         raise ValueError("`predictions` should be a tuple with two elements (start_logits, end_logits).")
+
+    print(predictions)
     all_start_logits, all_end_logits = predictions
 
     if len(predictions[0]) != len(features):
@@ -146,7 +148,6 @@ def postprocess_qa_predictions(
 
         # Only keep the best `n_best_size` predictions.
         predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[:n_best_size]
-        print(predictions)
         # Add back the minimum null prediction if it was removed because of its low score.
         if (
             version_2_with_negative
