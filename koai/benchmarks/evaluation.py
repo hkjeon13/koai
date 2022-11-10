@@ -115,6 +115,9 @@ def get_metrics(
         _metric = evaluate.load(metric_name)
 
         def compute_metrics(p):
+            print(p.predictions)
+            print(p.label_ids)
+            raise ValueError
             return _metric.compute(predictions=p.predictions, references=p.label_ids)
 
     return compute_metrics
