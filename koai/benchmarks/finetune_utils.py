@@ -293,7 +293,7 @@ def get_example_function(
                     (o if sequence_ids[k] == context_index else None)
                     for k, o in enumerate(tokenized_inputs["offset_mapping"][i])
                 ]
-                print(tokenized_inputs['offset_mapping'])
+                print(tokenized_inputs['offset_mapping'][i])
                 raise ValueError
             return tokenized_inputs
 
