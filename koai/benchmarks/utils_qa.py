@@ -58,6 +58,7 @@ def postprocess_qa_predictions(
         raise ValueError("`predictions` should be a tuple with two elements (start_logits, end_logits).")
 
     print(predictions)
+    raise ValueError
     all_start_logits, all_end_logits = predictions
 
     if len(predictions[0]) != len(features):
