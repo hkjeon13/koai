@@ -123,13 +123,16 @@ def postprocess_qa_predictions(
                         or offset_mapping[end_index] is None
                         or len(offset_mapping[end_index]) < 2
                     ):
+                        print(111111)
                         continue
                     # Don't consider answers with a length that is either < 0 or > max_answer_length.
                     if end_index < start_index or end_index - start_index + 1 > max_answer_length:
+                        print(222222)
                         continue
                     # Don't consider answer that don't have the maximum context available (if such information is
                     # provided).
                     if token_is_max_context is not None and not token_is_max_context.get(str(start_index), False):
+                        print(333333)
                         continue
 
                     prelim_predictions.append(
