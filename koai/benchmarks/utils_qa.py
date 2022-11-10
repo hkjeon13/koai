@@ -57,8 +57,6 @@ def postprocess_qa_predictions(
     if len(predictions) != 2:
         raise ValueError("`predictions` should be a tuple with two elements (start_logits, end_logits).")
 
-    print(predictions)
-    raise ValueError
     all_start_logits, all_end_logits = predictions
 
     if len(predictions[0]) != len(features):
@@ -93,6 +91,9 @@ def postprocess_qa_predictions(
             # We grab the predictions of the model for this feature.
             start_logits = all_start_logits[feature_index]
             end_logits = all_end_logits[feature_index]
+            print(start_logits)
+            print(end_logits)
+            raise ValueError
             # This is what will allow us to map some the positions in our logits to span of texts in the original
             # context.
             offset_mapping = features[feature_index]["offset_mapping"]
