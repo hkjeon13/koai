@@ -123,6 +123,7 @@ def postprocess_qa_predictions(
                         or offset_mapping[end_index] is None
                         or len(offset_mapping[end_index]) < 2
                     ):
+                        print("offset:::",offset_mapping)
                         print(111111)
                         continue
                     # Don't consider answers with a length that is either < 0 or > max_answer_length.
