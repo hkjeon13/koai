@@ -284,7 +284,7 @@ def get_example_function(
             tokenized_inputs["example_id"] = []
             for i in range(len(tokenized_inputs["input_ids"])):
                 sequence_ids = tokenized_inputs.sequence_ids(i)
-                context_index = 1 if pad_on_right else 0
+                context_index = 0 if pad_on_right else 1
                 sample_index = sample_mapping[i]
                 tokenized_inputs["example_id"].append(
                     examples[info.id_column][sample_index]
@@ -293,8 +293,6 @@ def get_example_function(
                     (o if sequence_ids[k] == context_index else None)
                     for k, o in enumerate(tokenized_inputs["offset_mapping"][i])
                 ]
-                print(tokenized_inputs['offset_mapping'][i])
-                raise ValueError
             return tokenized_inputs
 
 
