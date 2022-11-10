@@ -93,8 +93,6 @@ def postprocess_qa_predictions(
             end_logits = all_end_logits[feature_index]
             # This is what will allow us to map some the positions in our logits to span of texts in the original
             # context.
-            print(features[feature_index])
-            raise ValueError
             offset_mapping = features[feature_index]["offset_mapping"]
             # Optional `token_is_max_context`, if provided we will remove answers that do not have the maximum context
             # available in the current feature.
@@ -125,7 +123,6 @@ def postprocess_qa_predictions(
                         or offset_mapping[end_index] is None
                         or len(offset_mapping[end_index]) < 2
                     ):
-                        print("offset:::",offset_mapping)
                         print(111111)
                         continue
                     # Don't consider answers with a length that is either < 0 or > max_answer_length.
