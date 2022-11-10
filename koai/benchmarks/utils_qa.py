@@ -111,8 +111,6 @@ def postprocess_qa_predictions(
             # Go through all possibilities for the `n_best_size` greater start and end logits.
             start_indexes = np.argsort(start_logits)[-1 : -n_best_size - 1 : -1].tolist()
             end_indexes = np.argsort(end_logits)[-1 : -n_best_size - 1 : -1].tolist()
-            print("START:::", start_indexes)
-            print("END:::", end_indexes)
             for start_index in start_indexes:
                 for end_index in end_indexes:
                     # Don't consider out-of-scope answers, either because the indices are out of bounds or correspond
@@ -142,6 +140,7 @@ def postprocess_qa_predictions(
                             "end_logit": end_logits[end_index],
                         }
                     )
+        print("prelim_predictions:", prelim_predictions)
         if version_2_with_negative and min_null_prediction is not None:
             # Add the minimum null prediction
             prelim_predictions.append(min_null_prediction)
