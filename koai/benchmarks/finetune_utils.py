@@ -81,10 +81,10 @@ TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k),
 class TaskInfo:
     task: Tuple[str, str]
     task_type: str
-    id_column: str
     text_column: str
     label_column: Union[str, Dict[str, str]]
     num_labels: int = 2
+    id_column: Optional[str] = None,
     text_pair_column: Optional[str] = None
     train_split: str = "train"
     eval_split: str = "validation"

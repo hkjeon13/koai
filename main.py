@@ -1,7 +1,7 @@
 from koai import finetune
 
 finetune(
-    "klue-mrc",
+    "klue-dp",
     "ainize/klue-bert-base-mrc",
     do_train=False,
     do_eval=True,
