@@ -113,7 +113,6 @@ def get_metrics(
             }
     elif task_type == "question-answering":
         _metric = evaluate.load(metric_name)
-
         def compute_metrics(p):
             return _metric.compute(predictions=p.predictions, references=p.label_ids)
 
