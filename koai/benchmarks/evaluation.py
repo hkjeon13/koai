@@ -48,7 +48,7 @@ def get_metrics(
                 }
             return results
 
-    elif task_type == "sequence-classification":
+    elif task_type in ("sequence-classification",):
         _metric = evaluate.load(metric_name)
 
         def compute_metrics(p):
