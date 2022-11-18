@@ -108,7 +108,7 @@ def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length: int) -> P
     params = {}
     if "max_seq_length" in _params:
         params["max_seq_length"] = max_seq_length
-    if "num_relation" in _params:
+    if "num_relations" in _params:
         params["num_relations"] = info.num_labels
 
     _model = _model.from_pretrained(
