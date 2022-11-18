@@ -9,7 +9,7 @@ from transformers.modeling_outputs import SequenceClassifierOutput
 from transformers.models.bert.modeling_bert import BertPooler
 
 
-# not yet - Now it is just concept!!
+#TODO:  not yet - Now it is just concept!!
 class BertForRelationExtraction(BertPreTrainedModel):
     def __init__(self, config):
 

@@ -12,7 +12,7 @@ def get_mrc_post_processing_function(
             examples=examples,
             features=features,
             predictions=predictions,
-            id_column=info.id_column,
+            id_column_name=info.id_column,
             version_2_with_negative=options.get("version_2_with_negative"),
             n_best_size=options.get("n_best_size"),
             max_answer_length=options.get("max_answer_length"),
@@ -30,7 +30,6 @@ def get_mrc_post_processing_function(
 
         else:
             formatted_predictions = [{"id": k, "prediction_text": v} for k, v in predictions.items()]
-
         references = [{"id": ex[info.id_column], "answers": ex[info.label_column]} for ex in examples]
         return EvalPrediction(predictions=formatted_predictions, label_ids=references)
     return process_function

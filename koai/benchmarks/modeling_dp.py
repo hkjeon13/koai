@@ -105,7 +105,7 @@ MODEL_FOR_DEPENDENCY_PARSING_MAPPING = OrderedDict(
 
 class AutoModelForDependencyParsing:
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path, max_seq_length:Optional[int]=None, num_relations:Optional[int]=None, *model_args, **kwargs):
         config = kwargs.pop("config", None)
         trust_remote_code = kwargs.pop("trust_remote_code", False)
         kwargs["_from_auto"] = True
@@ -130,7 +130,9 @@ class AutoModelForDependencyParsing:
             )
         model_class = MODEL_FOR_DEPENDENCY_PARSING_MAPPING.get(config.model_type)
         return model_class.from_pretrained(
-            pretrained_model_name_or_path, *model_args, config=config, **hub_kwargs, **kwargs
+            pretrained_model_name_or_path,
+            max_seq_length=max_seq_length, num_relations=num_relations, config=config,
+            *model_args, **hub_kwargs, **kwargs
         )
 
 

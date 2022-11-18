@@ -1,11 +1,29 @@
-# This code is origin from "https://github.com/huggingface/transformers/blob/main/examples/pytorch/question-answering/utils_qa.py"
-import os
+# coding=utf-8
+# Copyright 2020 The HuggingFace Team All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Post-processing utilities for question answering.
+"""
+import collections
 import json
 import logging
+import os
+from typing import Optional, Tuple
+
 import numpy as np
-from tqdm import tqdm
-from typing import Tuple, Optional
-from collections import defaultdict, OrderedDict
+from tqdm.auto import tqdm
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,18 +32,19 @@ def postprocess_qa_predictions(
     examples,
     features,
     predictions: Tuple[np.ndarray, np.ndarray],
-    id_column: str,
     version_2_with_negative: bool = False,
     n_best_size: int = 20,
     max_answer_length: int = 30,
     null_score_diff_threshold: float = 0.0,
     output_dir: Optional[str] = None,
     prefix: Optional[str] = None,
+    id_column_name:str = "id",
     log_level: Optional[int] = logging.WARNING,
 ):
     """
     Post-processes the predictions of a question-answering model to convert them to answers that are substrings of the
     original contexts. This is the base postprocessing functions for models that only return start and end logits.
+
     Args:
         examples: The non-preprocessed dataset (see the main script for more information).
         features: The processed dataset (see the main script for more information).
@@ -44,6 +63,7 @@ def postprocess_qa_predictions(
             the null answer minus this threshold, the null answer is selected for this example (note that the score of
             the null answer for an example giving several features is the minimum of the scores for the null answer on
             each feature: all features must be aligned on the fact they `want` to predict a null answer).
+
             Only useful when :obj:`version_2_with_negative` is :obj:`True`.
         output_dir (:obj:`str`, `optional`):
             If provided, the dictionaries of predictions, n_best predictions (with their scores and logits) and, if
@@ -62,16 +82,16 @@ def postprocess_qa_predictions(
         raise ValueError(f"Got {len(predictions[0])} predictions and {len(features)} features.")
 
     # Build a map example to its corresponding features.
-    example_id_to_index = {k: i for i, k in enumerate(examples[id_column])}
-    features_per_example = defaultdict(list)
+    example_id_to_index = {k: i for i, k in enumerate(examples[id_column_name])}
+    features_per_example = collections.defaultdict(list)
     for i, feature in enumerate(features):
         features_per_example[example_id_to_index[feature["example_id"]]].append(i)
 
     # The dictionaries we have to fill.
-    all_predictions = OrderedDict()
-    all_nbest_json = OrderedDict()
+    all_predictions = collections.OrderedDict()
+    all_nbest_json = collections.OrderedDict()
     if version_2_with_negative:
-        scores_diff_json = OrderedDict()
+        scores_diff_json = collections.OrderedDict()
 
     # Logging.
     logger.setLevel(log_level)
@@ -178,7 +198,7 @@ def postprocess_qa_predictions(
 
         # Pick the best prediction. If the null answer is not possible, this is easy.
         if not version_2_with_negative:
-            all_predictions[example[id_column]] = predictions[0]["text"]
+            all_predictions[example[id_column_name]] = predictions[0]["text"]
         else:
             # Otherwise we first need to find the best non-empty prediction.
             i = 0
@@ -188,14 +208,14 @@ def postprocess_qa_predictions(
 
             # Then we compare to the null prediction using the threshold.
             score_diff = null_score - best_non_null_pred["start_logit"] - best_non_null_pred["end_logit"]
-            scores_diff_json[example[id_column]] = float(score_diff)  # To be JSON-serializable.
+            scores_diff_json[example[id_column_name]] = float(score_diff)  # To be JSON-serializable.
             if score_diff > null_score_diff_threshold:
-                all_predictions[example[id_column]] = ""
+                all_predictions[example[id_column_name]] = ""
             else:
-                all_predictions[example[id_column]] = best_non_null_pred["text"]
+                all_predictions[example[id_column_name]] = best_non_null_pred["text"]
 
         # Make `predictions` JSON-serializable by casting np.float back to float.
-        all_nbest_json[example[id_column]] = [
+        all_nbest_json[example[id_column_name]] = [
             {k: (float(v) if isinstance(v, (np.float16, np.float32, np.float64)) else v) for k, v in pred.items()}
             for pred in predictions
         ]
