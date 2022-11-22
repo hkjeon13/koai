@@ -317,7 +317,7 @@ def get_example_function(
 
                 # One example can give several spans, this is the index of the example containing this span of text.
                 sample_index = sample_mapping[i]
-                tokenized_inputs["example_id"].append(examples["id"][sample_index])
+                tokenized_inputs["example_id"].append(examples[info.id_column][sample_index])
 
                 # Set to None the offset_mapping that are not part of the context so it's easy to determine if a token
                 # position is part of the context or not.
