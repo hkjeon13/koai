@@ -21,6 +21,8 @@ def get_mrc_post_processing_function(
             log_level=log_level,
             prefix=stage,
         )
+        print(predictions)
+        raise ValueError
         # Format the result to the format the metric expects.
         if options["version_2_with_negative"]:
             formatted_predictions = [
