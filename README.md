@@ -3,7 +3,10 @@
 
 ```
 $ pip install koai
+# pip install git+https://eddie14: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@github.com/hkjeon13/koai.git@develop
 ```
+
+
 
 
 ## FineTuning
