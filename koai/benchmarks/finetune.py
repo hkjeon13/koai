@@ -190,7 +190,7 @@ def finetune(
         other_params = {}
         if "post_process_function" in params and info.task_type == "question-answering":
             other_params["post_process_function"] = get_mrc_post_processing_function(info, output_dir=output_dir)
-            other_params["eval_examples"] = eval_examples if kwargs.get("do_eval") else None
+            other_params["eval_examples"] = eval_examples.select(range(100)) if kwargs.get("do_eval") else None
 
         trainer = trainer(
             model=model,
