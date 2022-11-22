@@ -138,12 +138,12 @@ def finetune(
         if isinstance(example_function, tuple):
             train_function, eval_function = example_function
             if info.train_split in dataset:
-                dataset[info.train_split] = dataset.map(
+                dataset[info.train_split] = dataset[info.train_split].map(
                     train_function, batched=True, remove_columns=_rm_columns
                 )
 
             if info.eval_split in dataset:
-                dataset[info.eval_split] = dataset.map(
+                dataset[info.eval_split] = dataset[info.train_split].map(
                     eval_function, batched=True, remove_columns=_rm_columns
                 )
         else:
