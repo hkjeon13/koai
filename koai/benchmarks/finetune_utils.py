@@ -82,10 +82,10 @@ TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k, de
 class TaskInfo:
     task: Tuple[str, str]
     task_type: str
-    id_column: str
     text_column: str
     label_column: Union[str, Dict[str, str]]
     num_labels: int = 2
+    id_column: Optional[str] = None,
     text_pair_column: Optional[str] = None
     train_split: str = "train"
     eval_split: str = "validation"
@@ -109,7 +109,7 @@ def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length: int) -> P
     params = {}
     if "max_seq_length" in _params:
         params["max_seq_length"] = max_seq_length
-    if "num_relation" in _params:
+    if "num_relations" in _params:
         params["num_relations"] = info.num_labels
 
     _model = _model.from_pretrained(
