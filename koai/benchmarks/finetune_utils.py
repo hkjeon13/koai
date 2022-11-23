@@ -65,15 +65,16 @@ with open(_task_path, "r", encoding='utf-8') as f:
 
 PREPROCESS_FUNCTIONS_MAP = OrderedDict([
     ("klue-sts", klue_sts_preprocess_function),
-    ("klue-re", klue_re_preprocess_function)
+    ("klue-re", klue_re_preprocess_function),
+    ("klue-mrc", {"train": default_preprocess_function, "validation": None})
 ])
 
 POSTPROCESS_FUNCTIONS_MAP = OrderedDict([
     ("klue-mrc", get_mrc_post_processing_function ),
 ])
 
-TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k),
-                       "postprocess_function": POSTPROCESS_FUNCTIONS_MAP.get(k)})
+TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k, default_preprocess_function),
+                       "postprocess_function": POSTPROCESS_FUNCTIONS_MAP.get(k, default_preprocess_function)})
          for k, v in TASKS.items()}
 
 
@@ -221,16 +222,12 @@ def get_example_function(
 
     elif info.task_type == "question-answering":
         pad_on_right = tokenizer.padding_side == "right"
-        text_column = info.text_column if pad_on_right else info.text_pair_column
-        text_pair_column = info.text_pair_column if pad_on_right else info.text_column
         doc_stride = info.extra_options.get("doc_stride", 0)
-        def example_function(examples):
-            texts = examples.get(text_column)
-            text_pairs = examples.get(text_pair_column)
+        def train_example_function(examples):
             tokenized_inputs = tokenizer(
-                texts,
-                text_pairs,
-                truncation= "only_first" if pad_on_right else "only_second",
+                examples[info.text_pair_column if pad_on_right else info.text_column],
+                examples[info.text_column if pad_on_right else info.text_pair_column],
+                truncation=True,
                 stride=doc_stride,
                 max_length=max_source_length,
                 return_overflowing_tokens=True,
@@ -284,7 +281,7 @@ def get_example_function(
             tokenized_inputs["example_id"] = []
             for i in range(len(tokenized_inputs["input_ids"])):
                 sequence_ids = tokenized_inputs.sequence_ids(i)
-                context_index = 1 if pad_on_right else 0
+                context_index = 0 if pad_on_right else 1
                 sample_index = sample_mapping[i]
                 tokenized_inputs["example_id"].append(
                     examples[info.id_column][sample_index]
@@ -293,10 +290,40 @@ def get_example_function(
                     (o if sequence_ids[k] == context_index else None)
                     for k, o in enumerate(tokenized_inputs["offset_mapping"][i])
                 ]
+            return tokenized_inputs
+        def eval_example_function(examples):
+            tokenized_inputs = tokenizer(
+                examples[info.text_pair_column if pad_on_right else info.text_column],
+                examples[info.text_column if pad_on_right else info.text_pair_column],
+                truncation=True,
+                stride=doc_stride,
+                max_length=max_source_length,
+                return_overflowing_tokens=True,
+                return_offsets_mapping=True,
+                padding="max_length"
+            )
+
+            sample_mapping = tokenized_inputs.pop("overflow_to_sample_mapping")
+            tokenized_inputs["example_id"] = []
+
+            for i in range(len(tokenized_inputs["input_ids"])):
+                # Grab the sequence corresponding to that example (to know what is the context and what is the question).
+                sequence_ids = tokenized_inputs.sequence_ids(i)
+                context_index = 1 if pad_on_right else 0
+
+                # One example can give several spans, this is the index of the example containing this span of text.
+                sample_index = sample_mapping[i]
+                tokenized_inputs["example_id"].append(examples[info.id_column][sample_index])
+
+                # Set to None the offset_mapping that are not part of the context so it's easy to determine if a token
+                # position is part of the context or not.
+                tokenized_inputs["offset_mapping"][i] = [
+                    (o if sequence_ids[k] == context_index else None)
+                    for k, o in enumerate(tokenized_inputs["offset_mapping"][i])
+                ]
 
             return tokenized_inputs
-
-
+        return train_example_function, eval_example_function
     else:
         def example_function(examples):
             tokenized_inputs = tokenizer(

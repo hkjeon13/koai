@@ -108,7 +108,23 @@ def finetune(
             else:
                 tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
         dataset = load_dataset(*info.task)
-        dataset = dataset.map(info.preprocess_function, batched=True)
+        eval_examples = dataset.get(info.eval_split)
+
+        if isinstance(info.preprocess_function, dict):
+            preprocess_train = info.preprocess_function.get(info.train_split)
+            if preprocess_train is not None:
+                dataset[info.train_split] = dataset[info.train_split].map(
+                    preprocess_train, batched=True
+                )
+
+            preprocess_eval = info.preprocess_function.get(info.eval_split)
+            if preprocess_eval is not None:
+                dataset[info.eval_split] = dataset[info.eval_split].map(
+                    preprocess_eval, batched=True
+                )
+        else:
+            dataset = dataset.map(info.preprocess_function, batched=True)
+
         example_function = get_example_function(
             info,
             tokenizer=tokenizer,
@@ -117,9 +133,24 @@ def finetune(
             padding=padding,
         )
 
-        _rm_columns = get_dataset_columns(dataset)
-        eval_examples = dataset.get(info.eval_split)
-        dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
+
+        if isinstance(example_function, tuple):
+            _rm_columns = get_dataset_columns(dataset)
+            train_function, eval_function = example_function
+            if info.train_split in dataset:
+                dataset[info.train_split] = dataset[info.train_split].map(
+                    train_function,
+                    batched=True,
+                    remove_columns=dataset[info.train_split].column_names
+                )
+
+            if info.eval_split in dataset:
+                dataset[info.eval_split] = dataset[info.eval_split].map(
+                    eval_function, batched=True, remove_columns=dataset[info.eval_split].column_names
+                )
+        else:
+            dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
+
         data_collator = get_data_collator(task_type=info.task_type)
 
         collator_params = list(signature(data_collator).parameters.keys())

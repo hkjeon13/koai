@@ -34,7 +34,7 @@ def postprocess_qa_predictions(
     predictions: Tuple[np.ndarray, np.ndarray],
     version_2_with_negative: bool = False,
     n_best_size: int = 20,
-    max_answer_length: int = 30,
+    max_answer_length: int = 128,
     null_score_diff_threshold: float = 0.0,
     output_dir: Optional[str] = None,
     prefix: Optional[str] = None,
@@ -76,6 +76,7 @@ def postprocess_qa_predictions(
     """
     if len(predictions) != 2:
         raise ValueError("`predictions` should be a tuple with two elements (start_logits, end_logits).")
+
     all_start_logits, all_end_logits = predictions
 
     if len(predictions[0]) != len(features):
@@ -166,7 +167,6 @@ def postprocess_qa_predictions(
 
         # Only keep the best `n_best_size` predictions.
         predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[:n_best_size]
-
         # Add back the minimum null prediction if it was removed because of its low score.
         if (
             version_2_with_negative
