@@ -53,6 +53,9 @@ finetune(
 (그 밖에 허깅페이스의 transformers.TrainingArguments 의 모든 인자를 입력할 수 있습니다.)
 
 
+## Available Tasks
+- KLUE(except "KLUE-DST")
+
 ## Issue
 
 
