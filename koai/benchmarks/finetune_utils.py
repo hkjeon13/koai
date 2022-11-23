@@ -222,16 +222,12 @@ def get_example_function(
 
     elif info.task_type == "question-answering":
         pad_on_right = tokenizer.padding_side == "right"
-        text_column = info.text_column if pad_on_right else info.text_pair_column
-        text_pair_column = info.text_pair_column if pad_on_right else info.text_column
         doc_stride = info.extra_options.get("doc_stride", 0)
         def train_example_function(examples):
-            texts = examples.get(text_column)
-            text_pairs = examples.get(text_pair_column)
             tokenized_inputs = tokenizer(
-                texts,
-                text_pairs,
-                truncation= "only_first" if pad_on_right else "only_second",
+                examples[info.text_pair_column if pad_on_right else info.text_column],
+                examples[info.text_column if pad_on_right else info.text_pair_column],
+                truncation=True,
                 stride=doc_stride,
                 max_length=max_source_length,
                 return_overflowing_tokens=True,
@@ -297,9 +293,9 @@ def get_example_function(
             return tokenized_inputs
         def eval_example_function(examples):
             tokenized_inputs = tokenizer(
-                examples.get(text_column),
-                examples.get(text_pair_column),
-                truncation="only_first" if pad_on_right else "only_second",
+                examples[info.text_pair_column if pad_on_right else info.text_column],
+                examples[info.text_column if pad_on_right else info.text_pair_column],
+                truncation=True,
                 stride=doc_stride,
                 max_length=max_source_length,
                 return_overflowing_tokens=True,
