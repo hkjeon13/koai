@@ -58,6 +58,5 @@ finetune(
 
 ## Issue
 
-
 -  현재 개발 중에 있는 프로젝트입니다. 향후 벤치마크가 추가될 예정입니다.
 -  소스의 많은 부분들이, https://github.com/huggingface/transformers/ 를 참고 및 인용하여 제작되었습니다.
