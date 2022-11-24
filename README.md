@@ -54,7 +54,8 @@ finetune(
 
 
 ## Available Tasks
-- KLUE(except "KLUE-DST")
+- GLUE(except "glue-mnli_matched","glue-mnli_mismatched", "glue-ax")
+- KLUE(except "klue-wos")
 
 ## Issue
 
