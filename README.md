@@ -15,12 +15,27 @@ $ pip install koai
 ```
 from koai import finetune
 
+# finetuning and evaluating on klue-sts dataset
 finetune(
-    "klue-sts", 
+    task_name="klue-sts", 
+    model_name_or_path="klue/bert-base", 
+    do_train=True, 
+    do_eval=True, 
+    num_train_epochs=5, 
+    evaluation_strategy="epoch",
+    save_strategy="no",
+    logging_strategy="epoch"
+)
+
+# finetuning and evaluating on all klue dataset (except 'wos')
+# if "finetune_model_across_the_tasks" is True, the model train all the tasks in KLUE
+# but it is false(default is false), finetuning the language model individually.  
+finetune(
+    "klue", 
     "klue/bert-base", 
     do_train=True, 
     do_eval=True, 
-    num_train_epochs=1, 
+    num_train_epochs=5, 
     evaluation_strategy="epoch",
     save_strategy="no",
     logging_strategy="epoch"
@@ -54,7 +69,8 @@ finetune(
 
 
 ## Available Tasks
-- KLUE(except "KLUE-DST")
+- GLUE(except "glue-mnli_matched","glue-mnli_mismatched", "glue-ax")
+- KLUE(except "klue-wos")
 
 ## Issue
 

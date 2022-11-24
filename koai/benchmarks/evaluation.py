@@ -22,9 +22,9 @@ def get_metrics(
         metric_name: str,
         tokenizer: Optional[PreTrainedTokenizerBase or PreTrainedTokenizerFast],
         id2label: Optional[Dict[int, str]] = None) -> Callable:
-    if task_type == "token-classification":
-        _metric = evaluate.load(metric_name)
 
+    _metric = evaluate.load(*metric_name.split("-"))
+    if task_type == "token-classification":
         def compute_metrics(p):
             preds, labels = p
             preds = np.argmax(preds, axis=-1)
@@ -49,8 +49,6 @@ def get_metrics(
             return results
 
     elif task_type in ("sequence-classification",):
-        _metric = evaluate.load(metric_name)
-
         def compute_metrics(p):
             preds, labels = p
             preds = np.argmax(preds, axis=-1)
@@ -112,7 +110,6 @@ def get_metrics(
                 "LAS": sum(las) / len(las),
             }
     elif task_type == "question-answering":
-        _metric = evaluate.load(metric_name)
         def compute_metrics(p):
             return _metric.compute(predictions=p.predictions, references=p.label_ids)
 
