@@ -1,0 +1,6 @@
+transformers
+datasets
+seqeval
+nltk
+rouge_score
+evaluate
