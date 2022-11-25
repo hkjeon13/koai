@@ -16,5 +16,4 @@
   "glue-sst2": {"task": "glue-sst2", "task_type":"sequence-classification", "text_column": "sentence", "label_column": "label", "num_labels": 2, "metric_name":"glue-sst2"},
   "glue-sstb": {"task": "glue-sstb", "task_type":"sequence-classification", "text_column": "sentence1", "text_pair_column": "sentence2", "label_column": "label", "num_labels": 1, "metric_name":"glue-sstb"},
   "glue-wnli": {"task": "glue-wnli", "task_type":"sequence-classification", "text_column": "sentence1", "text_pair_column": "sentence2", "label_column": "label", "num_labels": 2, "metric_name":"glue-wnli"}
-
 }
