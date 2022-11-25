@@ -134,8 +134,8 @@ def get_task_info(task_name: str)-> List[TaskInfo]:
 
     if not isinstance(tasks, list):
         tasks = [tasks]
-    output = [TaskInfo.from_dict(t) for t in tasks]
-    return output
+
+    return [TaskInfo.from_dict(t) for t in tasks]
 
 
 def get_example_function(
