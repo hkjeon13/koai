@@ -20,8 +20,8 @@ setup(
 
     python_requires=">=3",
 
-    packages=find_packages("./"),
-    package_data= { "": ["*.json"]},
+    packages=find_packages("."),
+    package_data= {"": ["*.json"]},
     include_package_data=True,
     install_requires=[
             "transformers",

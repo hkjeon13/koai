@@ -85,7 +85,7 @@ class TaskInfo:
     text_column: str
     label_column: Union[str, Dict[str, str]]
     num_labels: int = 2
-    id_column: Optional[str] = None,
+    id_column: Optional[str] = None
     text_pair_column: Optional[str] = None
     train_split: str = "train"
     eval_split: str = "validation"
