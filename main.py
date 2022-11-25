@@ -1,4 +1,4 @@
-from koai import finetune
+'''from koai import finetune
 
 finetune(
     "klue-re",
@@ -11,3 +11,10 @@ finetune(
     logging_strategy="epoch",
     max_source_length=512,
 )
+
+'''
+import json
+
+with open("koai/benchmarks/benchmarks.json") as r:
+    content = json.load(r)
+print(content)
