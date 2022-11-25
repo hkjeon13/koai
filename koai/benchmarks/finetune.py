@@ -100,7 +100,7 @@ def finetune(
     model = None
     models_for_return = []
     for info in infolist:
-        logger.info(info.task_name)
+        logger.info(info.task)
         _path = os.path.join(output_dir, trim_task_name(task_name))
         has_sp_tokens = info.extra_options.get("has_special_tokens")
         if has_sp_tokens:
