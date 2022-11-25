@@ -133,9 +133,9 @@ def finetune(
             padding=padding,
         )
 
+        _rm_columns = get_dataset_columns(dataset)
 
         if isinstance(example_function, tuple):
-            _rm_columns = get_dataset_columns(dataset)
             train_function, eval_function = example_function
             if info.train_split in dataset:
                 dataset[info.train_split] = dataset[info.train_split].map(
