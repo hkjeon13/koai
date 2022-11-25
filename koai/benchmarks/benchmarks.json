@@ -13,7 +13,8 @@
     "text_column": "title",
     "text_pair_column": null,
     "label_column": "label",
-    "metric_name": "f1"
+    "metric_name": "f1",
+    "num_labels": 7
   },
   "klue-nli": {
     "task": "klue-nli",
