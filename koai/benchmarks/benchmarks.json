@@ -207,7 +207,7 @@
     "metric_name": "glue-sst2"
   },
   "glue-sstb": {
-    "task": "glue-sstb",
+    "task": "glue-stsb",
     "task_type": "sequence-classification",
     "text_column": "sentence1",
     "text_pair_column": "sentence2",
