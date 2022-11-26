@@ -1,3 +1,19 @@
+Metadata-Version: 2.1
+Name: koai
+Version: 0.0.0.9
+Summary: Korean AI Project
+Home-page: https://github.com/hkjeon13/koai
+Author: Eddie
+Author-email: hkjeo13@gmail.com
+License: MIT
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Requires-Python: >=3
+Description-Content-Type: text/markdown
+
 ## KoAI; Korean AI Project. 한국어를 위한 인공지능 프로젝트
 
 

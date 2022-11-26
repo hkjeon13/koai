@@ -6,7 +6,7 @@ with open("README.md", mode="r", encoding="utf-8") as readme:
 
 setup(
     name='koai',
-    version='0.0.0.7',
+    version='0.0.1.0',
     description='Korean AI Project',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -20,8 +20,8 @@ setup(
 
     python_requires=">=3",
 
-    packages=find_packages("./"),
-    package_data= { "": ["*.json"]},
+    packages=find_packages("."),
+    package_data= {"": ["*.json"]},
     include_package_data=True,
     install_requires=[
             "transformers",

@@ -4,7 +4,7 @@ import json
 from inspect import signature
 from dataclasses import dataclass, field
 from collections import OrderedDict
-from typing import Tuple, Union, Optional, Callable, Dict
+from typing import Tuple, Union, Optional, Callable, Dict, List
 from .evaluation import get_metrics
 from .preprocess import *
 from .postprocess import *
@@ -85,7 +85,7 @@ class TaskInfo:
     text_column: str
     label_column: Union[str, Dict[str, str]]
     num_labels: int = 2
-    id_column: Optional[str] = None,
+    id_column: Optional[str] = None
     text_pair_column: Optional[str] = None
     train_split: str = "train"
     eval_split: str = "validation"
@@ -127,15 +127,15 @@ def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length: int) -> P
     return _model
 
 
-def get_task_info(task_name: str):
+def get_task_info(task_name: str)-> List[TaskInfo]:
     tasks = TASKS.get(task_name, [])
     if not tasks:
         tasks = [TASKS.get(key) for key in TASKS.keys() if key.split("-")[0] == task_name]
 
     if not isinstance(tasks, list):
         tasks = [tasks]
-    output = [TaskInfo.from_dict(t) for t in tasks]
-    return output
+
+    return [TaskInfo.from_dict(t) for t in tasks]
 
 
 def get_example_function(
