@@ -51,7 +51,12 @@ def get_metrics(
     elif task_type in ("sequence-classification",):
         def compute_metrics(p):
             preds, labels = p
-            preds = np.argmax(preds, axis=-1)
+            _, dim = preds.shape
+            if dim == 1:
+                preds = np.squeeze(preds)
+            else:
+                preds = np.argmax(preds, axis=-1)
+
             if metric_name == "f1":
                 results = _metric.compute(predictions=preds, references=labels, average='macro')
             else:

@@ -1,5 +1,6 @@
 from inspect import signature
-from datasets import load_dataset, DatasetDict
+from typing import Union
+from datasets import load_dataset, DatasetDict, IterableDatasetDict
 from transformers import AutoTokenizer, PreTrainedModel, logging
 from .finetune_utils import (
     TaskInfo,
@@ -12,7 +13,7 @@ from .finetune_utils import (
     get_metrics
 )
 from .postprocess import get_mrc_post_processing_function
-
+from ..utils import IterableDatasetWrapper, nrows_from_info
 
 import os
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
@@ -70,9 +71,13 @@ def add_special_tokens_to_unused(
     return tokenizer
 
 
-def get_dataset_columns(dataset:DatasetDict):
+def get_dataset_columns(dataset: Union[DatasetDict, IterableDatasetDict]):
     columns = []
-    columns += list(dataset.column_names.values())[0]
+    if isinstance(dataset, DatasetDict):
+        columns += list(dataset.column_names.values())[0]
+    elif isinstance(dataset, IterableDatasetDict):
+        sample = next(iter(list(dataset.values())[0]))
+        columns += list(sample.keys())
     return columns
 
 
@@ -87,6 +92,8 @@ def finetune(
         save_model: bool = False,
         return_models: bool = False,
         output_dir: str = "runs/",
+        train_samples: Optional[int] = None,
+        eval_samples: Optional[int] = None,
         finetune_model_across_the_tasks: bool = False,
         add_sp_tokens_to_unused: bool = True,
         *args, **kwargs) -> PreTrainedModel:
@@ -100,8 +107,7 @@ def finetune(
     model = None
     models_for_return = []
     for info in infolist:
-        print(info.task)
-
+        print("-".join(info.task))
         _path = os.path.join(output_dir, trim_task_name(task_name))
         has_sp_tokens = info.extra_options.get("has_special_tokens")
         if has_sp_tokens:
@@ -110,6 +116,13 @@ def finetune(
             else:
                 tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
         dataset = load_dataset(*info.task)
+
+        if info.train_split in dataset and train_samples is not None:
+            dataset[info.train_split] = dataset[info.train_split].select(range(train_samples))
+
+        if info.eval_split in dataset and eval_samples is not None:
+            dataset[info.eval_split] = dataset[info.eval_split].select(range(eval_samples))
+
         eval_examples = dataset.get(info.eval_split)
 
         if isinstance(info.preprocess_function, dict):
@@ -143,12 +156,14 @@ def finetune(
                 dataset[info.train_split] = dataset[info.train_split].map(
                     train_function,
                     batched=True,
-                    remove_columns=dataset[info.train_split].column_names
+                    remove_columns=dataset[info.train_split].column_names if remove_columns else None
                 )
 
             if info.eval_split in dataset:
                 dataset[info.eval_split] = dataset[info.eval_split].map(
-                    eval_function, batched=True, remove_columns=dataset[info.eval_split].column_names
+                    eval_function,
+                    batched=True,
+                    remove_columns=dataset[info.eval_split].column_names if remove_columns else None
                 )
         else:
             dataset = dataset.map(example_function, batched=True, remove_columns=_rm_columns)
@@ -183,23 +198,27 @@ def finetune(
         if "optim" not in traininig_args_params:
             traininig_args_params["optim"] = "adamw_torch"
 
+        train_dataset, eval_dataset = dataset.get(info.train_split), dataset.get(info.eval_split)
+
         traininig_args = traininig_args(
             output_dir=output_dir,
             label_names=["head_labels", "dp_labels"] if info.task_type == "dependency-parsing" else None,
             **traininig_args_params,
         )
+
         params = list(signature(trainer.__init__).parameters.keys())
         other_params = {}
         if "post_process_function" in params and info.task_type == "question-answering":
             other_params["post_process_function"] = get_mrc_post_processing_function(info, output_dir=output_dir)
             other_params["eval_examples"] = eval_examples if kwargs.get("do_eval") else None
+
         trainer = trainer(
             model=model,
             args=traininig_args,
             compute_metrics=compute_metrics,
             data_collator=data_collator,
-            train_dataset=dataset.get(info.train_split),
-            eval_dataset=dataset.get(info.eval_split),
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
             **other_params
         )
 

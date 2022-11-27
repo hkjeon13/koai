@@ -29,7 +29,9 @@ setup(
             "seqeval",
             "nltk",
             "rouge_score",
-            "evaluate"
+            "evaluate",
+            "sklearn",
+            "scipy"
     ],
     classifiers=[
         "Intended Audience :: Developers",
