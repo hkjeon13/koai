@@ -206,14 +206,14 @@
     "num_labels": 2,
     "metric_name": "glue-sst2"
   },
-  "glue-sstb": {
+  "glue-stsb": {
     "task": "glue-stsb",
     "task_type": "sequence-classification",
     "text_column": "sentence1",
     "text_pair_column": "sentence2",
     "label_column": "label",
     "num_labels": 1,
-    "metric_name": "glue-sstb"
+    "metric_name": "glue-stsb"
   },
   "glue-wnli": {
     "task": "glue-wnli",

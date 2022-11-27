@@ -1,9 +1,9 @@
-'''from koai import finetune
+from koai import finetune
 
 finetune(
-    "klue-re",
+    "glue-stsb",
     "klue/bert-base",
-    do_train=False,
+    do_train=True,
     do_eval=True,
     num_train_epochs=1,
     evaluation_strategy="epoch",
@@ -11,10 +11,3 @@ finetune(
     logging_strategy="epoch",
     max_source_length=512,
 )
-
-'''
-import json
-
-with open("koai/benchmarks/benchmarks.json") as r:
-    content = json.load(r)
-print(content)
