@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
-
+from koai import __version__
 with open("README.md", mode="r", encoding="utf-8") as readme:
     long_description = readme.read()
 
 
 setup(
     name='koai',
-    version='0.0.1.2',
+    version=__version__,
     description='Korean AI Project',
     long_description=long_description,
     long_description_content_type="text/markdown",
