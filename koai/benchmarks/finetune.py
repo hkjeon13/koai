@@ -123,7 +123,7 @@ def finetune(
         if info.custom_eval_dataset is not None:
             custom_dataset[info.eval_split] = info.custom_eval_dataset
 
-        if len(custom_dataset)==2:
+        if len(custom_dataset) == 2:
             dataset = DatasetDict(custom_dataset)
         elif len(custom_dataset) == 1:
             candidates = [info.train_split, info.eval_split]
