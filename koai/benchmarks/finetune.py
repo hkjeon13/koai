@@ -117,7 +117,7 @@ def finetune(
                 tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
 
         custom_dataset = {}
-        if info.custom_train_datasetet is not None:
+        if info.custom_train_dataset is not None:
             custom_dataset[info.train_split] = info.custom_train_dataset
 
         if info.custom_eval_datasetet is not None:
