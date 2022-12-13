@@ -120,7 +120,7 @@ def finetune(
         if info.custom_train_dataset is not None:
             custom_dataset[info.train_split] = info.custom_train_dataset
 
-        if info.custom_eval_datasetet is not None:
+        if info.custom_eval_dataset is not None:
             custom_dataset[info.eval_split] = info.custom_eval_dataset
 
         if len(custom_dataset)==2:
