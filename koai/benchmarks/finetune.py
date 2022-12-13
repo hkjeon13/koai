@@ -115,7 +115,26 @@ def finetune(
                 tokenizer = add_special_tokens_to_unused(tokenizer, info.extra_options["additional_special_tokens"])
             else:
                 tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
-        dataset = load_dataset(*info.task)
+
+        custom_dataset = {}
+        if info.custom_train_datasetet is not None:
+            custom_dataset[info.train_split] = info.custom_train_dataset
+
+        if info.custom_eval_datasetet is not None:
+            custom_dataset[info.eval_split] = info.custom_eval_dataset
+
+        if len(custom_dataset)==2:
+            dataset = DatasetDict(custom_dataset)
+        elif len(custom_dataset) == 1:
+            candidates = [info.train_split, info.eval_split]
+            custom_column = candidates.pop(next(iter(custom_dataset.keys())))
+            origin_column = candidates[0]
+            dataset = DatasetDict({
+                custom_column: custom_dataset[custom_column],
+                origin_column: load_dataset(*info.task, split=origin_column)
+            })
+        else:
+            dataset = load_dataset(*info.task)
 
         if info.train_split in dataset and train_samples is not None:
             dataset[info.train_split] = dataset[info.train_split].select(range(train_samples))

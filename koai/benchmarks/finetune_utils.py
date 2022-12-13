@@ -32,6 +32,7 @@ from transformers import (
     DataCollatorForPermutationLanguageModeling,
     DataCollatorForWholeWordMask,
 )
+from datasets import Dataset
 
 DATA_COLLATOR = OrderedDict([
     ("sop", DataCollatorForSOP),
@@ -55,8 +56,11 @@ MODEL_CONFIG = OrderedDict([
 ])
 
 
-TASK_ATTRS = ["task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name", "extra_options",
-              "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words", "id_column", "postprocess_function"]
+TASK_ATTRS = [
+    "task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name", "extra_options",
+    "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words", "id_column",
+    "postprocess_function", "custom_train_dataset", "custom_eval_dataset"
+]
 
 
 _task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmarks.json")
@@ -89,6 +93,8 @@ class TaskInfo:
     text_pair_column: Optional[str] = None
     train_split: str = "train"
     eval_split: str = "validation"
+    custom_train_dataset: Optional[Dataset] = None
+    custom_eval_dataset: Optional[Dataset] = None
     metric_name: Optional[str] = None
     extra_options: dict = field(default_factory=dict)
     is_split_into_words: bool = False
