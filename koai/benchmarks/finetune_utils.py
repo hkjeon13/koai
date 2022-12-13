@@ -17,6 +17,7 @@ from transformers import (
     AutoModelForQuestionAnswering,
     AutoModelForMaskedLM,
     AutoModelForSeq2SeqLM,
+    AutoModelForMultipleChoice,
     PreTrainedTokenizerBase,
     PreTrainedTokenizerFast,
     PreTrainedModel,
@@ -32,6 +33,7 @@ from transformers import (
     DataCollatorForPermutationLanguageModeling,
     DataCollatorForWholeWordMask,
 )
+
 from datasets import Dataset
 
 DATA_COLLATOR = OrderedDict([
@@ -45,6 +47,7 @@ DATA_COLLATOR = OrderedDict([
 
 MODEL_CONFIG = OrderedDict([
     ('sequence-classification', AutoModelForSequenceClassification),
+    ('multiple-choice', AutoModelForMultipleChoice),
     ('token-classification', AutoModelForTokenClassification),
     ('conditional-generation', AutoModelForCausalLM),
     ('question-answering', AutoModelForQuestionAnswering),
@@ -125,15 +128,19 @@ def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length: int) -> P
     )
 
     if _model is None:
-        raise FileExistsError(f"Can't find any model matching '{model_name_or_path}' on huggingface hub or local directory.")
+        raise FileExistsError(
+            f"Can't find any model matching '{model_name_or_path}' on huggingface hub or local directory."
+        )
+
     label_names = info.extra_options.get("label_names")
     if info.task_type in ("token-classification", "dependency-parsing") and label_names:
         _model.config.id2label = {i: l for i, l in enumerate(label_names)}
         _model.config.label2id = {v: k for k, v in _model.config.id2label.items()}
+
     return _model
 
 
-def get_task_info(task_name: str)-> List[TaskInfo]:
+def get_task_info(task_name: str) -> List[TaskInfo]:
     tasks = TASKS.get(task_name, [])
     if not tasks:
         tasks = [TASKS.get(key) for key in TASKS.keys() if key.split("-")[0] == task_name]
@@ -152,13 +159,18 @@ def get_example_function(
         padding: str = "longest",
         truncation: bool = True
 ):
+    extra_options = info.extra_options
+    label_all_tokens = extra_options.get("label_all_tokens", False)
+    b_to_i_label = extra_options.get("extra_options", [])
+    label2id = {name: i for i, name in enumerate(extra_options.get("label_names", []))}
+    prefix = extra_options.get("prefix", "")
+    prefix = [prefix] if info.is_split_into_words else prefix
+
+
     if info.task_type == "token-classification":
-        extra_options = info.extra_options
-        label_all_tokens = extra_options.get("label_all_tokens", False)
-        b_to_i_label = extra_options.get("extra_options", [])
         def example_function(examples):
             tokenized_inputs = tokenizer(
-                examples.get(info.text_column),
+                [prefix+t for t in examples.get(info.text_column)],
                 text_pair=examples.get(info.text_pair_column),
                 max_length=max_source_length,
                 truncation=truncation,
@@ -190,14 +202,10 @@ def get_example_function(
             raise ValueError("For Dependency Parsing, 'label_colmn' should be constructed as {'head':<head_name>, 'dependency':<dependency_relations>}")
 
         deprels, heads = info.label_column["dependency"], info.label_column["head"]
-        extra_options = info.extra_options
-        label_all_tokens = extra_options.get("label_all_tokens", False)
-        b_to_i_label = extra_options.get("extra_options", [])
-        label2id = {name: i for i, name in enumerate(extra_options["label_names"])}
 
         def example_function(examples):
             tokenized_inputs = tokenizer(
-                examples["word_form"],
+                [prefix+t for t in examples[info.text_column]],
                 padding="max_length",
                 truncation=True,
                 max_length=max_source_length,
@@ -299,7 +307,7 @@ def get_example_function(
             return tokenized_inputs
         def eval_example_function(examples):
             tokenized_inputs = tokenizer(
-                examples[info.text_pair_column if pad_on_right else info.text_column],
+                [prefix+t for t in examples[info.text_pair_column if pad_on_right else info.text_column]],
                 examples[info.text_column if pad_on_right else info.text_pair_column],
                 truncation=True,
                 stride=doc_stride,
@@ -330,16 +338,45 @@ def get_example_function(
 
             return tokenized_inputs
         return train_example_function, eval_example_function
-    else:
+
+    elif info.task_type == "sequence-to-sequence":
         def example_function(examples):
             tokenized_inputs = tokenizer(
-                examples.get(info.text_column),
+                [prefix+t for t in examples.get(info.text_column)],
                 text_pair=examples.get(info.text_pair_column),
                 max_length=max_source_length,
                 truncation=truncation,
                 padding=padding,
                 is_split_into_words=info.is_split_into_words
             )
+
+            if info.label_column in examples:
+                tokenized_labels = tokenizer(
+                    text=[example for example in examples[info.label_column]],
+                    padding=True,
+                    max_length=max_source_length,
+                    truncation=True
+                )
+
+                tokenized_inputs['labels'] = [
+                    [l if l != tokenizer.pad_token_id else -100 for l in label]
+                    for label in tokenized_labels['input_ids']
+                ]
+
+            return tokenized_inputs
+
+
+    else:
+        def example_function(examples):
+            tokenized_inputs = tokenizer(
+                [prefix+t for t in examples.get(info.text_column)],
+                text_pair=examples.get(info.text_pair_column),
+                max_length=max_source_length,
+                truncation=truncation,
+                padding=padding,
+                is_split_into_words=info.is_split_into_words
+            )
+
             if info.label_column in examples:
                 tokenized_inputs['labels'] = [label for label in examples[info.label_column]]
             return tokenized_inputs
