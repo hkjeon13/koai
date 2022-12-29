@@ -5,7 +5,6 @@ from inspect import signature
 from dataclasses import dataclass, field
 from collections import OrderedDict
 from typing import Tuple, Union, Optional, Callable, Dict, List
-from .evaluation import get_metrics
 from .preprocess import *
 from .postprocess import *
 from .modeling_dp import AutoModelForDependencyParsing
@@ -87,6 +86,25 @@ TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k, de
 
 @dataclass
 class TaskInfo:
+    """
+    Args:
+        task:
+        task_type:
+        text_column:
+        label_column:
+        num_labels:
+        id_column:
+        text_pair_column:
+        train_split:
+        eval_split:
+        custom_train_dataset:
+        custom_eval_dataset:
+        metric_name:
+        extra_options:
+        is_split_into_words:
+        preprocess_function:
+        postprocess_function:
+    """
     task: Tuple[str, str]
     task_type: str
     text_column: str
@@ -396,7 +414,7 @@ def get_data_collator(task_type: str):
     return DATA_COLLATOR.get(task_type, DataCollatorWithPadding)
 
 
-def trim_task_name(name:str):
+def trim_task_name(name: str):
     name = name.replace(" ", "_").replace(".", "_")
     name = re.sub("[^a-zA-Z가-힣0-9\-_]+", "", name)
     return name

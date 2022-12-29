@@ -96,7 +96,7 @@ def finetune(
         eval_samples: Optional[int] = None,
         finetune_model_across_the_tasks: bool = False,
         add_sp_tokens_to_unused: bool = True,
-        *args, **kwargs) -> PreTrainedModel:
+        *args, **kwargs) -> Optional[PreTrainedModel]:
     """
 
     Args:
@@ -106,19 +106,31 @@ def finetune(
         custom_task_infolist: A list of the custom tasks was wrapped with the 'TaskInfo' class.
         max_source_length: A maximum length of the input sequences.
         max_target_length: A maximum length of the label sequences (Optional).
-        padding: padding strategy for the language tokenizer (familiar with the 'transformers.PretrainedTokenizerBase' )
+        padding: padding strategy for the language tokenizer (familiar with the 'transformers.PretrainedTokenizerBase')
         save_model: Whether the fine-tuned model is saved on the local path (at the end of training/evaluating).
         return_models: Whether the function returns the model or not
         output_dir: Output directory for saving model.
         train_samples: The number of samples to train (Optional).
         eval_samples: The number of samples to evaluate (Optional).
         finetune_model_across_the_tasks: Whether the model train across the tasks or not.
-        add_sp_tokens_to_unused: Whether the tokenizer replaces its unused tokens with the special tokens or not(for the task need to add the special tokens),
+        add_sp_tokens_to_unused: Whether the tokenizer replaces its unused tokens with the special tokens or not (Optional).
         *args:
         **kwargs:
-
     Returns:
+        Pretrained model or None
 
+    >>> from koai import finetune
+
+    >>> finetune(
+    ...    task_name="klue-sts",
+    ...    model_name_or_path="klue/bert-base",
+    ...    do_train=True,
+    ...    do_eval=True,
+    ...    num_train_epochs=5,
+    ...    evaluation_strategy="epoch",
+    ...    save_strategy="no",
+    ...    logging_strategy="epoch"
+    ... )
     """
     infolist = custom_task_infolist
     if infolist is None:
