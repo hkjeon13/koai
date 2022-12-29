@@ -10,8 +10,8 @@ from .finetune_utils import (
     get_trainer,
     get_data_collator,
     trim_task_name,
-    get_metrics
 )
+from .evaluation import get_metrics
 from .postprocess import get_mrc_post_processing_function
 from ..utils import IterableDatasetWrapper, nrows_from_info
 
@@ -34,6 +34,7 @@ def load_json(path: str, encoding:str = 'utf-8') -> Union[dict, list]:
 def write_json(path: str, content: Union[dict, list], encoding:str = 'utf-8') -> None:
     with open(path, 'w', encoding=encoding) as w:
         json.dump(content, w)
+
 
 def write_text(path: str, content: str, encoding:str = 'utf-8') -> None:
     with open(path, 'w', encoding=encoding) as w:

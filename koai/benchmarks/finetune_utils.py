@@ -87,23 +87,30 @@ TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k, de
 @dataclass
 class TaskInfo:
     """
+    A Wrapper Class for the Benchmark(or Custom) Task
+
     Args:
-        task:
-        task_type:
-        text_column:
-        label_column:
-        num_labels:
-        id_column:
-        text_pair_column:
-        train_split:
-        eval_split:
-        custom_train_dataset:
-        custom_eval_dataset:
-        metric_name:
-        extra_options:
-        is_split_into_words:
-        preprocess_function:
-        postprocess_function:
+        task: Task name on the Huggingface-Hub or Custom name.
+        task_type: Type of task
+            support tasks: [
+                'sequence-classification', 'multiple-choice', 'token-classification', 'conditional-generation',
+                'question-answering', 'masked-language-modeling', 'causal-language-modeling', 'sequence-to-sequence',
+                'dependency-parsing'
+            ]
+        text_column: A column name for the text; text means the (first) input sequence.
+        label_column: A column name for the label
+        num_labels: The number of classification labels(if you do the non-sequence classification task(e.g., Text Generation), don't need to be filled).
+        id_column: A column name for the id (it is used for the evaluation with Question Answering Model(except Generation Model)).
+        text_pair_column: A column name for the second text column name. It is useful when the task has distinguishable Token ID(e.g. sts; Input = SeqA + [SEP] + SeqB).
+        train_split: A split name of the Dataset to train(under the 'datasets.DatasetDict' structure).
+        eval_split: A split name of the Dataset to evaluate(under the 'datasets.DatasetDict' structure).
+        custom_train_dataset: custom dataset to train (Optional, 'transformers.Dataset').
+        custom_eval_dataset: custom dataset to evaluate (Optional, 'transformers.Dataset').
+        metric_name: A metric name for the evaluation(registered in the Huggingface-Hub).
+        extra_options: A Extra-Options to apply(It should be more sophisticated in the future version).
+        is_split_into_words: Whether the tokenizer tokenize a pre-tokenized sequences or not(e.g. if 'true', the type of sequence is 'List[List[str]]').
+        preprocess_function: pre-process functions for the dataset.
+        postprocess_function: post-process functions for the dataset.
     """
     task: Tuple[str, str]
     task_type: str
