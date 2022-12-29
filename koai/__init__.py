@@ -1,6 +1,6 @@
 from . import benchmarks
-from .benchmarks import finetune
+from .benchmarks import finetune, TaskInfo
 
-__version__ = "0.0.1.4"
+__version__ = "0.0.1.6"
 
-__all__ = ["benchmarks", "finetune"] # more functions will be added soon...
+__all__ = [ "benchmarks", "finetune", "TaskInfo"] # more functions will be added soon...
