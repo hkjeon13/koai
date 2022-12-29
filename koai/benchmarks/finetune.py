@@ -97,8 +97,29 @@ def finetune(
         finetune_model_across_the_tasks: bool = False,
         add_sp_tokens_to_unused: bool = True,
         *args, **kwargs) -> PreTrainedModel:
+    """
 
-    # TODO: finetune_model_across_the_tasks 구현.
+    Args:
+        task_name: Task name on the Huggingface-Hub.
+        model_name_or_path: Model name on the Huggingface-Hub.
+        remove_columns: Column names to remove.
+        custom_task_infolist: A list of the custom tasks was wrapped with the 'TaskInfo' class.
+        max_source_length: A maximum length of the input sequences.
+        max_target_length: A maximum length of the label sequences (Optional).
+        padding: padding strategy for the language tokenizer (familiar with the 'transformers.PretrainedTokenizerBase' )
+        save_model: Whether the fine-tuned model is saved on the local path (at the end of training/evaluating).
+        return_models: Whether the function returns the model or not
+        output_dir: Output directory for saving model.
+        train_samples: The number of samples to train (Optional).
+        eval_samples: The number of samples to evaluate (Optional).
+        finetune_model_across_the_tasks: Whether the model train across the tasks or not.
+        add_sp_tokens_to_unused: Whether the tokenizer replaces its unused tokens with the special tokens or not(for the task need to add the special tokens),
+        *args:
+        **kwargs:
+
+    Returns:
+
+    """
     infolist = custom_task_infolist
     if infolist is None:
         infolist = get_task_info(task_name=task_name)
