@@ -2,7 +2,7 @@ from koai import finetune
 
 
 def test_fineune():
-    finetune(
+    return finetune(
         "glue-cola",
         "klue/bert-base",
         do_train=False,
@@ -12,11 +12,11 @@ def test_fineune():
         save_strategy="no",
         logging_strategy="epoch",
         max_source_length=512,
+        return_models=True
     )
 
-
 def main():
-    assert test_fineune() == None
+    assert isinstance(test_fineune(), list)
 
 
 if __name__=="__main__":
