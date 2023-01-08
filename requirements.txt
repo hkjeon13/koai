@@ -4,3 +4,4 @@ evaluate
 nltk
 torch
 seqeval
+pytest
