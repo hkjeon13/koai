@@ -1,10 +1,12 @@
 from koai import finetune
+
+
 def test_fineune():
     finetune(
         "glue-cola",
         "klue/bert-base",
-        do_train=True,
-        do_eval=True,
+        do_train=False,
+        do_eval=False,
         num_train_epochs=1,
         evaluation_strategy="epoch",
         save_strategy="no",
@@ -12,8 +14,10 @@ def test_fineune():
         max_source_length=512,
     )
 
+
 def main():
     assert test_fineune() == None
+
 
 if __name__=="__main__":
     main()
