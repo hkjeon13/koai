@@ -146,9 +146,13 @@ def finetune(
         has_sp_tokens = info.extra_options.get("has_special_tokens")
         if has_sp_tokens:
             if add_sp_tokens_to_unused:
-                tokenizer = add_special_tokens_to_unused(tokenizer, info.extra_options["additional_special_tokens"])
+                tokenizer = add_special_tokens_to_unused(
+                    tokenizer, info.extra_options["additional_special_tokens"]
+                )
             else:
-                tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
+                tokenizer.add_special_tokens(
+                    {"additional_special_tokens": info.extra_options["additional_special_tokens"]}
+                )
 
         custom_dataset = {}
         if info.custom_train_dataset is not None:
@@ -157,18 +161,23 @@ def finetune(
         if info.custom_eval_dataset is not None:
             custom_dataset[info.eval_split] = info.custom_eval_dataset
 
-        if len(custom_dataset) == 2:
-            dataset = DatasetDict(custom_dataset)
-        elif len(custom_dataset) == 1:
-            candidates = [info.train_split, info.eval_split]
-            custom_column = candidates.pop(next(iter(custom_dataset.keys())))
-            origin_column = candidates[0]
-            dataset = DatasetDict({
-                custom_column: custom_dataset[custom_column],
-                origin_column: load_dataset(*info.task, split=origin_column)
-            })
-        else:
+        if not custom_dataset:
             dataset = load_dataset(*info.task)
+        else:
+            if len(custom_dataset) == 1:
+                candidates = [info.train_split, info.eval_split]
+                custom_column = candidates.pop(next(iter(custom_dataset.keys())))
+                remain_column = candidates[0]
+                dataset = DatasetDict({
+                    custom_column: custom_dataset[custom_column],
+                    remain_column: load_dataset(*info.task, split=remain_column)
+                })
+            elif len(custom_dataset) == 2:
+                dataset = DatasetDict(custom_dataset)
+            else:
+                raise ValueError(
+                    f"Not Supported Replacement on the split(not '{info.train_split}', '{info.eval_split}')"
+                )
 
         if info.train_split in dataset and train_samples is not None:
             dataset[info.train_split] = dataset[info.train_split].select(range(train_samples))
