@@ -1,9 +1,8 @@
 from koai import finetune
 from transformers import PreTrainedModel
 
-def main():
-
-    model = finetune(
+def test_finetune():
+    return finetune(
         "glue-cola",
         "klue/bert-base",
         do_train=False,
@@ -15,7 +14,9 @@ def main():
         max_source_length=512,
         return_models=True
     )[0]
-    assert isinstance(model, PreTrainedModel)
+
+def main():
+    assert isinstance(test_finetune(), PreTrainedModel)
 
 
 if __name__ == "__main__":
