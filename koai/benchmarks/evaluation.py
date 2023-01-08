@@ -56,7 +56,6 @@ def get_metrics(
                 preds = np.squeeze(preds)
             else:
                 preds = np.argmax(preds, axis=-1)
-
             if metric_name == "f1":
                 results = _metric.compute(predictions=preds, references=labels, average='macro')
             else:

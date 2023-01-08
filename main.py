@@ -1,7 +1,7 @@
 from koai import finetune
 
 finetune(
-    "glue-stsb",
+    "glue-cola",
     "klue/bert-base",
     do_train=True,
     do_eval=True,
@@ -10,6 +10,4 @@ finetune(
     save_strategy="no",
     logging_strategy="epoch",
     max_source_length=512,
-    train_samples=100,
-    eval_samples=10,
 )

@@ -139,8 +139,11 @@ class TaskInfo:
 
 def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length: int) -> PreTrainedModel:
     _model = MODEL_CONFIG.get(info.task_type)
+    if _model is None:
+        raise ValueError(f"Model type '{info.task_type}' is not defined! The model type should be in {list(MODEL_CONFIG.keys())}")
     _params = list(signature(_model.from_pretrained).parameters.keys())
-    params = {}
+    params = {k: v for k, v in info.extra_options.items() if k in _params}
+
     if "max_seq_length" in _params:
         params["max_seq_length"] = max_seq_length
     if "num_relations" in _params:
