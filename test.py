@@ -14,8 +14,8 @@ def main():
         logging_strategy="epoch",
         max_source_length=512,
         return_models=True
-    )
-    assert isinstance(model[0], PreTrainedModel)
+    )[0]
+    assert isinstance(model, PreTrainedModel)
 
 
 if __name__ == "__main__":
