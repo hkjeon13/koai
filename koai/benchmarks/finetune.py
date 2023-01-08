@@ -10,8 +10,8 @@ from .finetune_utils import (
     get_trainer,
     get_data_collator,
     trim_task_name,
-    get_metrics
 )
+from .evaluation import get_metrics
 from .postprocess import get_mrc_post_processing_function
 from ..utils import IterableDatasetWrapper, nrows_from_info
 
@@ -34,6 +34,7 @@ def load_json(path: str, encoding:str = 'utf-8') -> Union[dict, list]:
 def write_json(path: str, content: Union[dict, list], encoding:str = 'utf-8') -> None:
     with open(path, 'w', encoding=encoding) as w:
         json.dump(content, w)
+
 
 def write_text(path: str, content: str, encoding:str = 'utf-8') -> None:
     with open(path, 'w', encoding=encoding) as w:
@@ -96,9 +97,42 @@ def finetune(
         eval_samples: Optional[int] = None,
         finetune_model_across_the_tasks: bool = False,
         add_sp_tokens_to_unused: bool = True,
-        *args, **kwargs) -> PreTrainedModel:
+        *args, **kwargs) -> Optional[PreTrainedModel]:
+    """
 
-    # TODO: finetune_model_across_the_tasks 구현.
+    Args:
+        task_name: Task name on the Huggingface-Hub.
+        model_name_or_path: Model name on the Huggingface-Hub.
+        remove_columns: Column names to remove.
+        custom_task_infolist: A list of the custom tasks was wrapped with the 'TaskInfo' class.
+        max_source_length: A maximum length of the input sequences.
+        max_target_length: A maximum length of the label sequences (Optional).
+        padding: padding strategy for the language tokenizer (familiar with the 'transformers.PretrainedTokenizerBase')
+        save_model: Whether the fine-tuned model is saved on the local path (at the end of training/evaluating).
+        return_models: Whether the function returns the model or not
+        output_dir: Output directory for saving model.
+        train_samples: The number of samples to train (Optional).
+        eval_samples: The number of samples to evaluate (Optional).
+        finetune_model_across_the_tasks: Whether the model train across the tasks or not.
+        add_sp_tokens_to_unused: Whether the tokenizer replaces its unused tokens with the special tokens or not (Optional).
+        *args:
+        **kwargs:
+    Returns:
+        Pretrained model or None
+
+    >>> from koai import finetune
+
+    >>> finetune(
+    ...    task_name="klue-sts",
+    ...    model_name_or_path="klue/bert-base",
+    ...    do_train=True,
+    ...    do_eval=True,
+    ...    num_train_epochs=5,
+    ...    evaluation_strategy="epoch",
+    ...    save_strategy="no",
+    ...    logging_strategy="epoch"
+    ... )
+    """
     infolist = custom_task_infolist
     if infolist is None:
         infolist = get_task_info(task_name=task_name)
@@ -112,9 +146,13 @@ def finetune(
         has_sp_tokens = info.extra_options.get("has_special_tokens")
         if has_sp_tokens:
             if add_sp_tokens_to_unused:
-                tokenizer = add_special_tokens_to_unused(tokenizer, info.extra_options["additional_special_tokens"])
+                tokenizer = add_special_tokens_to_unused(
+                    tokenizer, info.extra_options["additional_special_tokens"]
+                )
             else:
-                tokenizer.add_special_tokens({"additional_special_tokens": info.extra_options["additional_special_tokens"]})
+                tokenizer.add_special_tokens(
+                    {"additional_special_tokens": info.extra_options["additional_special_tokens"]}
+                )
 
         custom_dataset = {}
         if info.custom_train_dataset is not None:
@@ -123,18 +161,23 @@ def finetune(
         if info.custom_eval_dataset is not None:
             custom_dataset[info.eval_split] = info.custom_eval_dataset
 
-        if len(custom_dataset) == 2:
-            dataset = DatasetDict(custom_dataset)
-        elif len(custom_dataset) == 1:
-            candidates = [info.train_split, info.eval_split]
-            custom_column = candidates.pop(next(iter(custom_dataset.keys())))
-            origin_column = candidates[0]
-            dataset = DatasetDict({
-                custom_column: custom_dataset[custom_column],
-                origin_column: load_dataset(*info.task, split=origin_column)
-            })
-        else:
+        if not custom_dataset:
             dataset = load_dataset(*info.task)
+        else:
+            if len(custom_dataset) == 1:
+                candidates = [info.train_split, info.eval_split]
+                custom_column = candidates.pop(next(iter(custom_dataset.keys())))
+                remain_column = candidates[0]
+                dataset = DatasetDict({
+                    custom_column: custom_dataset[custom_column],
+                    remain_column: load_dataset(*info.task, split=remain_column)
+                })
+            elif len(custom_dataset) == 2:
+                dataset = DatasetDict(custom_dataset)
+            else:
+                raise ValueError(
+                    f"Not Supported Replacement on the split(not '{info.train_split}', '{info.eval_split}')"
+                )
 
         if info.train_split in dataset and train_samples is not None:
             dataset[info.train_split] = dataset[info.train_split].select(range(train_samples))
