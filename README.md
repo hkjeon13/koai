@@ -69,7 +69,13 @@ finetune(
 
 
 ## Custom Task 
+
+커스텀 테스크를 정의하고 이를 조정 학습 할 수 있습니다. 예시는 다음과 같습니다.
 ```
+from koai import finetune
+from koai.benchmarks.finetune_utils import TaskInfo
+
+
 custom_task = TaskInfo(
     task="custom-task",
     task_type='sequence-classification',
@@ -81,7 +87,6 @@ custom_task = TaskInfo(
     custom_eval_dataset = dataset['test'],
     metric_name='f1'
 )
-
 
 models = finetune(
     "custom-task", 
