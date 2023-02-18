@@ -70,7 +70,7 @@ finetune(
 
 - GLUE(except "glue-mnli_matched","glue-mnli_mismatched", and "glue-ax")
 - KLUE(except "klue-wos")
-
+- koai.benchmarks.finetune_utils.TaskInfo를 이용하여 커스텀 테스크에도 적용 가능합니다.
 ## Issue
 
 - 현재 개발 중에 있는 프로젝트입니다. 향후 벤치마크가 추가될 예정입니다.
