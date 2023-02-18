@@ -1,7 +1,8 @@
+from typing import Optional, Any, List
+
+from datasets import interleave_datasets
 from datasets.combine import concatenate_datasets
 from torch.utils.data import IterableDataset
-from typing import Optional, Any, List
-from datasets import interleave_datasets
 
 
 def nrows_from_info(dataset: Any, split_name: str = 'train'):
@@ -27,7 +28,7 @@ class IterableDatasetWrapper(IterableDataset):
                  each_data_shuffle: bool = False) -> None:
 
         super(IterableDatasetWrapper, self).__init__()
-        split_names = ['train']*len(datasets) if split_names is None else split_names
+        split_names = ['train'] * len(datasets) if split_names is None else split_names
 
         assert len(datasets) == len(split_names)
 
@@ -80,9 +81,12 @@ class IterableDatasetWrapper(IterableDataset):
             except StopIteration:
                 break
 
+
 if __name__ == "__main__":
     from datasets import load_dataset
+
     dataset1 = load_dataset("psyche/kowiki", streaming=True)
     dataset2 = load_dataset("psyche/common_crawl", "1", streaming=True)
-    dataset = IterableDatasetWrapper([dataset1['train'], dataset2['train']], split_names=['train', 'train'], merge_method='concatenate')
+    dataset = IterableDatasetWrapper([dataset1['train'], dataset2['train']], split_names=['train', 'train'],
+                                     merge_method='concatenate')
     print(len(dataset))

@@ -24,22 +24,21 @@ from typing import Optional, Tuple
 import numpy as np
 from tqdm.auto import tqdm
 
-
 logger = logging.getLogger(__name__)
 
 
 def postprocess_qa_predictions(
-    examples,
-    features,
-    predictions: Tuple[np.ndarray, np.ndarray],
-    version_2_with_negative: bool = False,
-    n_best_size: int = 20,
-    max_answer_length: int = 128,
-    null_score_diff_threshold: float = 0.0,
-    output_dir: Optional[str] = None,
-    prefix: Optional[str] = None,
-    id_column_name:str = "id",
-    log_level: Optional[int] = logging.WARNING,
+        examples,
+        features,
+        predictions: Tuple[np.ndarray, np.ndarray],
+        version_2_with_negative: bool = False,
+        n_best_size: int = 20,
+        max_answer_length: int = 128,
+        null_score_diff_threshold: float = 0.0,
+        output_dir: Optional[str] = None,
+        prefix: Optional[str] = None,
+        id_column_name: str = "id",
+        log_level: Optional[int] = logging.WARNING,
 ):
     """
     Post-processes the predictions of a question-answering model to convert them to answers that are substrings of the
@@ -129,19 +128,19 @@ def postprocess_qa_predictions(
                 }
 
             # Go through all possibilities for the `n_best_size` greater start and end logits.
-            start_indexes = np.argsort(start_logits)[-1 : -n_best_size - 1 : -1].tolist()
-            end_indexes = np.argsort(end_logits)[-1 : -n_best_size - 1 : -1].tolist()
+            start_indexes = np.argsort(start_logits)[-1: -n_best_size - 1: -1].tolist()
+            end_indexes = np.argsort(end_logits)[-1: -n_best_size - 1: -1].tolist()
             for start_index in start_indexes:
                 for end_index in end_indexes:
                     # Don't consider out-of-scope answers, either because the indices are out of bounds or correspond
                     # to part of the input_ids that are not in the context.
                     if (
-                        start_index >= len(offset_mapping)
-                        or end_index >= len(offset_mapping)
-                        or offset_mapping[start_index] is None
-                        or len(offset_mapping[start_index]) < 2
-                        or offset_mapping[end_index] is None
-                        or len(offset_mapping[end_index]) < 2
+                            start_index >= len(offset_mapping)
+                            or end_index >= len(offset_mapping)
+                            or offset_mapping[start_index] is None
+                            or len(offset_mapping[start_index]) < 2
+                            or offset_mapping[end_index] is None
+                            or len(offset_mapping[end_index]) < 2
                     ):
                         continue
                     # Don't consider answers with a length that is either < 0 or > max_answer_length.
@@ -169,9 +168,9 @@ def postprocess_qa_predictions(
         predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[:n_best_size]
         # Add back the minimum null prediction if it was removed because of its low score.
         if (
-            version_2_with_negative
-            and min_null_prediction is not None
-            and not any(p["offsets"] == (0, 0) for p in predictions)
+                version_2_with_negative
+                and min_null_prediction is not None
+                and not any(p["offsets"] == (0, 0) for p in predictions)
         ):
             predictions.append(min_null_prediction)
 
@@ -179,7 +178,7 @@ def postprocess_qa_predictions(
         context = example["context"]
         for pred in predictions:
             offsets = pred.pop("offsets")
-            pred["text"] = context[offsets[0] : offsets[1]]
+            pred["text"] = context[offsets[0]: offsets[1]]
 
         # In the very rare edge case we have not a single non-null prediction, we create a fake prediction to avoid
         # failure.

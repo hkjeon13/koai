@@ -1,8 +1,10 @@
-import evaluate
-import numpy as np
 from typing import Optional, Callable, Dict
-from transformers import PreTrainedTokenizerBase, PreTrainedTokenizerFast
+
+import evaluate
 import nltk
+import numpy as np
+from transformers import PreTrainedTokenizerBase, PreTrainedTokenizerFast
+
 nltk.download("punkt")
 from nltk import sent_tokenize
 
@@ -17,12 +19,12 @@ def postprocess_text(preds, labels, metric='rouge'):
         labels = [[label] for label in labels]
     return preds, labels
 
+
 def get_metrics(
         task_type: str,
         metric_name: str,
         tokenizer: Optional[PreTrainedTokenizerBase or PreTrainedTokenizerFast],
         id2label: Optional[Dict[int, str]] = None) -> Callable:
-
     _metric = evaluate.load(*metric_name.split("-"))
     if task_type == "token-classification":
         def compute_metrics(p):

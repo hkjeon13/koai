@@ -3,10 +3,9 @@ from setuptools import setup, find_packages
 with open("README.md", mode="r", encoding="utf-8") as readme:
     long_description = readme.read()
 
-
 setup(
     name='koai',
-    version= "0.0.1.6",
+    version="0.0.1.6",
     description='Korean AI Project',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -21,17 +20,17 @@ setup(
     python_requires=">=3",
 
     packages=find_packages("."),
-    package_data= {"": ["*.json"]},
+    package_data={"": ["*.json"]},
     include_package_data=True,
     install_requires=[
-            "transformers",
-            "datasets",
-            "seqeval",
-            "nltk",
-            "rouge_score",
-            "evaluate",
-            "sklearn",
-            "scipy"
+        "transformers",
+        "datasets",
+        "seqeval",
+        "nltk",
+        "rouge_score",
+        "evaluate",
+        "sklearn",
+        "scipy"
     ],
     classifiers=[
         "Intended Audience :: Developers",

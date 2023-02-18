@@ -1,12 +1,17 @@
-from transformers import EvalPrediction
-from .utils_qa import postprocess_qa_predictions
 import logging
+
+from transformers import EvalPrediction
+
+from .utils_qa import postprocess_qa_predictions
+
+
 def get_mrc_post_processing_function(
         info, log_level: str = logging.WARNING,
         output_dir: str = "runs/", stage: str = "eval"
 ):
     # Post-processing: we match the start logits and end logits to answers in the original context.
     options = info.extra_options
+
     def process_function(examples, features, predictions):
         predictions = postprocess_qa_predictions(
             examples=examples,
@@ -32,4 +37,5 @@ def get_mrc_post_processing_function(
             formatted_predictions = [{"id": k, "prediction_text": v} for k, v in predictions.items()]
         references = [{"id": ex[info.id_column], "answers": ex[info.label_column]} for ex in examples]
         return EvalPrediction(predictions=formatted_predictions, label_ids=references)
+
     return process_function

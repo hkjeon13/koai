@@ -1,5 +1,7 @@
-from koai import finetune
 from transformers import PreTrainedModel
+
+from koai import finetune
+
 
 def test_finetune():
     return finetune(
@@ -14,6 +16,7 @@ def test_finetune():
         max_source_length=512,
         return_models=True
     )[0]
+
 
 def main():
     assert isinstance(test_finetune(), PreTrainedModel)
