@@ -1,7 +1,15 @@
+import json
+import os
+import re
 from inspect import signature
-from typing import Union
+from typing import List, Optional, Union
+
 from datasets import load_dataset, DatasetDict, IterableDatasetDict
 from transformers import AutoTokenizer, PreTrainedModel, logging
+from transformers.tokenization_utils_base import PreTrainedTokenizerBase
+from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
+
+from .evaluation import get_metrics
 from .finetune_utils import (
     TaskInfo,
     get_task_info,
@@ -11,34 +19,25 @@ from .finetune_utils import (
     get_data_collator,
     trim_task_name,
 )
-from .evaluation import get_metrics
 from .postprocess import get_mrc_post_processing_function
-from ..utils import IterableDatasetWrapper, nrows_from_info
-
-import os
-from transformers.tokenization_utils_base import PreTrainedTokenizerBase
-from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
-from typing import List, Optional, Union
-import json
-import re
-import os
 
 logger = logging.get_logger(__file__)
 
 
-def load_json(path: str, encoding:str = 'utf-8') -> Union[dict, list]:
+def load_json(path: str, encoding: str = 'utf-8') -> Union[dict, list]:
     with open(path, 'r', encoding=encoding) as r:
         return json.load(r)
 
 
-def write_json(path: str, content: Union[dict, list], encoding:str = 'utf-8') -> None:
+def write_json(path: str, content: Union[dict, list], encoding: str = 'utf-8') -> None:
     with open(path, 'w', encoding=encoding) as w:
         json.dump(content, w)
 
 
-def write_text(path: str, content: str, encoding:str = 'utf-8') -> None:
+def write_text(path: str, content: str, encoding: str = 'utf-8') -> None:
     with open(path, 'w', encoding=encoding) as w:
         w.write(content)
+
 
 _UNUSED = re.compile(r"\[unused[0-9]+\]")
 
@@ -47,7 +46,6 @@ def add_special_tokens_to_unused(
         tokenizer: Union[PreTrainedTokenizerBase, PreTrainedTokenizerFast],
         special_tokens: List[str],
         save_path: str = '.cache/') -> Union[PreTrainedTokenizerBase, PreTrainedTokenizerFast]:
-
     unused_tokens = sorted([(k, v) for k, v in tokenizer.vocab.items() if _UNUSED.match(k)], key=lambda x: x[1])
     vocab = tokenizer.vocab.copy()
     tokenizer.save_pretrained(save_path)

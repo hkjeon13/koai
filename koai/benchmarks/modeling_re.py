@@ -1,18 +1,18 @@
+from collections import OrderedDict
+from typing import Union, Optional, Tuple
+
 import torch
 from torch import nn
-from typing import Union, Optional, Tuple
-from collections import OrderedDict
-from transformers import AutoModelForSequenceClassification, BertPreTrainedModel, BertModel
+from transformers import BertPreTrainedModel, BertModel
+from transformers.modeling_outputs import SequenceClassifierOutput
 from transformers.models.auto.auto_factory import _LazyAutoMapping, _BaseAutoModelClass
 from transformers.models.auto.configuration_auto import CONFIG_MAPPING_NAMES
-from transformers.modeling_outputs import SequenceClassifierOutput
 from transformers.models.bert.modeling_bert import BertPooler
 
 
-#TODO:  not yet - Now it is just concept!!
+# TODO:  not yet - Now it is just concept!!
 class BertForRelationExtraction(BertPreTrainedModel):
     def __init__(self, config):
-
         super().__init__(config)
         self.num_labels = config.num_labels
 
@@ -33,7 +33,6 @@ class BertForRelationExtraction(BertPreTrainedModel):
     def set_subject_object_maps(self, mapping_dict: dict):
         self.subject_maps = mapping_dict.get("subject")
         self.object_maps = mapping_dict.get("object")
-
 
     def forward(
             self,
@@ -73,7 +72,7 @@ class BertForRelationExtraction(BertPreTrainedModel):
         sub_embeddings = subject_mask * sequence_output
         obj_embeddings = object_mask * sequence_output
 
-        pooled_output = outputs[1] # "pooled_output" is the meaninig of sentence
+        pooled_output = outputs[1]  # "pooled_output" is the meaninig of sentence
         subject_pooled_output = None
         object_pooled_output = None
         pooled_output = self.dropout(pooled_output)
@@ -82,14 +81,9 @@ class BertForRelationExtraction(BertPreTrainedModel):
         logits = self.classifier(pooled_output)
 
 
-
-
-
-
 RE_MODEL = OrderedDict([
     ("bert", BertForRelationExtraction),
 ])
-
 
 MODEL_CONFIG = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, RE_MODEL

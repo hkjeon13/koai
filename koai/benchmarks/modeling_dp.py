@@ -1,16 +1,16 @@
-import torch
 import logging
-from torch import nn
-from dataclasses import dataclass
 from collections import OrderedDict
-from torch.nn import CrossEntropyLoss
+from dataclasses import dataclass
 from typing import Optional, Tuple, Union
 
+import torch
+from torch import nn
+from torch.nn import CrossEntropyLoss
 from transformers import BertPreTrainedModel, BertModel, PretrainedConfig, AutoConfig
 from transformers.models.bert.modeling_bert import ModelOutput
 
-
 logger = logging.getLogger(__file__)
+
 
 @dataclass
 class BertDependencyParsingOutput(ModelOutput):
@@ -105,7 +105,8 @@ MODEL_FOR_DEPENDENCY_PARSING_MAPPING = OrderedDict(
 
 class AutoModelForDependencyParsing:
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path, max_seq_length:Optional[int]=None, num_relations:Optional[int]=None, *model_args, **kwargs):
+    def from_pretrained(cls, pretrained_model_name_or_path, max_seq_length: Optional[int] = None,
+                        num_relations: Optional[int] = None, *model_args, **kwargs):
         config = kwargs.pop("config", None)
         trust_remote_code = kwargs.pop("trust_remote_code", False)
         kwargs["_from_auto"] = True
@@ -136,5 +137,5 @@ class AutoModelForDependencyParsing:
         )
 
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     print(AutoModelForDependencyParsing.from_pretrained("klue/bert-base", 10, 20))

@@ -1,14 +1,12 @@
+import json
 import os
 import re
-import json
-from inspect import signature
-from dataclasses import dataclass, field
 from collections import OrderedDict
+from dataclasses import dataclass, field
+from inspect import signature
 from typing import Tuple, Union, Optional, Callable, Dict, List
-from .preprocess import *
-from .postprocess import *
-from .modeling_dp import AutoModelForDependencyParsing
-from .trainer_qa import QuestionAnsweringTrainer
+
+from datasets import Dataset
 from transformers import (
     AutoModelForSequenceClassification,
     AutoModelForTokenClassification,
@@ -33,7 +31,10 @@ from transformers import (
     DataCollatorForWholeWordMask,
 )
 
-from datasets import Dataset
+from .modeling_dp import AutoModelForDependencyParsing
+from .postprocess import *
+from .preprocess import *
+from .trainer_qa import QuestionAnsweringTrainer
 
 DATA_COLLATOR = OrderedDict([
     ("sop", DataCollatorForSOP),
@@ -57,13 +58,11 @@ MODEL_CONFIG = OrderedDict([
 
 ])
 
-
 TASK_ATTRS = [
     "task", "task_type", "text_column", "text_pair_column", "label_column", "metric_name", "extra_options",
     "preprocess_function", "train_split", "eval_split", "num_labels", "is_split_into_words", "id_column",
     "postprocess_function", "custom_train_dataset", "custom_eval_dataset"
 ]
-
 
 _task_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "benchmarks.json")
 with open(_task_path, "r", encoding='utf-8') as f:
@@ -76,7 +75,7 @@ PREPROCESS_FUNCTIONS_MAP = OrderedDict([
 ])
 
 POSTPROCESS_FUNCTIONS_MAP = OrderedDict([
-    ("klue-mrc", get_mrc_post_processing_function ),
+    ("klue-mrc", get_mrc_post_processing_function),
 ])
 
 TASKS = {k: dict(v, **{"preprocess_function": PREPROCESS_FUNCTIONS_MAP.get(k, default_preprocess_function),
@@ -140,7 +139,8 @@ class TaskInfo:
 def get_model(model_name_or_path: str, info: TaskInfo, max_seq_length: int) -> PreTrainedModel:
     _model = MODEL_CONFIG.get(info.task_type)
     if _model is None:
-        raise ValueError(f"Model type '{info.task_type}' is not defined! The model type should be in {list(MODEL_CONFIG.keys())}")
+        raise ValueError(
+            f"Model type '{info.task_type}' is not defined! The model type should be in {list(MODEL_CONFIG.keys())}")
     _params = list(signature(_model.from_pretrained).parameters.keys())
     params = {k: v for k, v in info.extra_options.items() if k in _params}
 
@@ -194,11 +194,10 @@ def get_example_function(
     prefix = extra_options.get("prefix", "")
     prefix = [prefix] if info.is_split_into_words else prefix
 
-
     if info.task_type == "token-classification":
         def example_function(examples):
             tokenized_inputs = tokenizer(
-                [prefix+t for t in examples.get(info.text_column)],
+                [prefix + t for t in examples.get(info.text_column)],
                 text_pair=examples.get(info.text_pair_column),
                 max_length=max_source_length,
                 truncation=truncation,
@@ -227,13 +226,14 @@ def get_example_function(
 
     elif info.task_type == "dependency-parsing":
         if not isinstance(info.label_column, dict):
-            raise ValueError("For Dependency Parsing, 'label_colmn' should be constructed as {'head':<head_name>, 'dependency':<dependency_relations>}")
+            raise ValueError(
+                "For Dependency Parsing, 'label_colmn' should be constructed as {'head':<head_name>, 'dependency':<dependency_relations>}")
 
         deprels, heads = info.label_column["dependency"], info.label_column["head"]
 
         def example_function(examples):
             tokenized_inputs = tokenizer(
-                [prefix+t for t in examples[info.text_column]],
+                [prefix + t for t in examples[info.text_column]],
                 padding="max_length",
                 truncation=True,
                 max_length=max_source_length,
@@ -265,6 +265,7 @@ def get_example_function(
     elif info.task_type == "question-answering":
         pad_on_right = tokenizer.padding_side == "right"
         doc_stride = info.extra_options.get("doc_stride", 0)
+
         def train_example_function(examples):
             tokenized_inputs = tokenizer(
                 examples[info.text_pair_column if pad_on_right else info.text_column],
@@ -333,9 +334,10 @@ def get_example_function(
                     for k, o in enumerate(tokenized_inputs["offset_mapping"][i])
                 ]
             return tokenized_inputs
+
         def eval_example_function(examples):
             tokenized_inputs = tokenizer(
-                [prefix+t for t in examples[info.text_pair_column if pad_on_right else info.text_column]],
+                [prefix + t for t in examples[info.text_pair_column if pad_on_right else info.text_column]],
                 examples[info.text_column if pad_on_right else info.text_pair_column],
                 truncation=True,
                 stride=doc_stride,
@@ -365,12 +367,13 @@ def get_example_function(
                 ]
 
             return tokenized_inputs
+
         return train_example_function, eval_example_function
 
     elif info.task_type == "sequence-to-sequence":
         def example_function(examples):
             tokenized_inputs = tokenizer(
-                [prefix+t for t in examples.get(info.text_column)],
+                [prefix + t for t in examples.get(info.text_column)],
                 text_pair=examples.get(info.text_pair_column),
                 max_length=max_source_length,
                 truncation=truncation,
@@ -397,7 +400,7 @@ def get_example_function(
     else:
         def example_function(examples):
             tokenized_inputs = tokenizer(
-                [prefix+t for t in examples.get(info.text_column)],
+                [prefix + t for t in examples.get(info.text_column)],
                 text_pair=examples.get(info.text_pair_column),
                 max_length=max_source_length,
                 truncation=truncation,

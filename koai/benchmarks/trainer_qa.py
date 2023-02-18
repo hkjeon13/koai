@@ -19,7 +19,6 @@ A subclass of `Trainer` specific to Question-Answering tasks
 from transformers import Trainer, is_torch_tpu_available
 from transformers.trainer_utils import PredictionOutput
 
-
 if is_torch_tpu_available(check_device=False):
     import torch_xla.core.xla_model as xm
     import torch_xla.debug.metrics as met
