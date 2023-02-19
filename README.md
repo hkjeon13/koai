@@ -66,6 +66,46 @@ finetune(
 
 (그 밖에 허깅페이스의 transformers.TrainingArguments 의 모든 인자를 입력할 수 있습니다.)
 
+
+
+## Custom Task 
+
+커스텀 테스크를 정의하고 이를 조정 학습 할 수 있습니다. 예시는 다음과 같습니다.
+```
+from koai import finetune
+from koai.benchmarks.finetune_utils import TaskInfo
+
+
+custom_task = TaskInfo(
+    task="custom-task",
+    task_type='sequence-classification',
+    text_column = "text",
+    label_column = "label",
+    num_labels=3,
+    eval_split = "test",
+    custom_train_dataset = dataset['train'],
+    custom_eval_dataset = dataset['test'],
+    metric_name='f1'
+)
+
+models = finetune(
+    "custom-task", 
+    "klue/roberta-base", 
+    custom_task_infolist=[custom_task], 
+    do_train=True, 
+    do_eval=True,
+    num_train_epochs=10,
+    per_device_train_batch_size=16,
+    per_device_eval_batch_size=8,
+    evaluation_strategy="epoch",
+    logging_strategy="epoch",
+    save_strategy="no",
+    padding=True,
+    return_models=True,
+    output_dir="runs"
+)
+```
+
 ## Available Tasks
 
 - GLUE(except "glue-mnli_matched","glue-mnli_mismatched", and "glue-ax")
