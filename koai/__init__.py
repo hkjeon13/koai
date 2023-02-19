@@ -1,4 +1,5 @@
 from . import benchmarks
+from . import models
 from .benchmarks import finetune, TaskInfo
 
 __version__ = "0.0.1.6"
