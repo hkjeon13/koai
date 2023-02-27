@@ -1,6 +1,7 @@
 from transformers import PreTrainedModel
 
 from koai import finetune
+from koai.models import AutoModelForBiEncoder
 
 
 def test_finetune():
@@ -18,8 +19,12 @@ def test_finetune():
     )[0]
 
 
+def test_biencoder():
+    model = AutoModelForBiEncoder.from_pretrained("klue/bert-base")
+
 def main():
-    assert isinstance(test_finetune(), PreTrainedModel)
+    # assert isinstance(test_finetune(), PreTrainedModel)
+    test_biencoder()
 
 
 if __name__ == "__main__":
