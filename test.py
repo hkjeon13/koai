@@ -20,12 +20,19 @@ def test_finetune():
 
 
 def test_biencoder():
-    model = AutoModelForBiEncoder.from_pretrained("klue/bert-base")
+    from transformers import AutoTokenizer
+    _NAME = "klue/bert-base"
+    tokenizer = AutoTokenizer.from_pretrained(_NAME)
+    model = AutoModelForBiEncoder.from_pretrained(_NAME)
+    model.eval()
+    #input_text =
 
 def main():
     # assert isinstance(test_finetune(), PreTrainedModel)
-    test_biencoder()
-
+    #test_biencoder()
+    import torch
+    a = torch.tensor([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    print(torch.diag(a))
 
 if __name__ == "__main__":
     main()
