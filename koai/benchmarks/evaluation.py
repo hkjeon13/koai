@@ -1,15 +1,12 @@
 from typing import Optional, Callable, Dict
-
 import evaluate
 import nltk
 import numpy as np
 from transformers import PreTrainedTokenizerBase, PreTrainedTokenizerFast
 
-nltk.download("punkt")
-from nltk import sent_tokenize
-
-
 def postprocess_text(preds, labels, metric='rouge'):
+    nltk.download("punkt")
+    from nltk import sent_tokenize
     preds = [pred.strip() for pred in preds]
     labels = [label.strip() for label in labels]
     if metric == 'rouge':

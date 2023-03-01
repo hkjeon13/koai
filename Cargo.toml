@@ -8,7 +8,7 @@ edition = "2018"
 
 [lib]
 name = "rs_utils"
-path = "koai/text.rs"
+path = "koai/utils/text.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
