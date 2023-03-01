@@ -1,6 +1,5 @@
 extern crate pyo3;
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 
 fn sliding_text_sequence(tokens:Vec<String>, window_size:usize, stride:usize) -> Vec<Vec<String>>{
     let length = ((tokens.len() - window_size) as f32 /stride as f32).ceil() as usize + 1;

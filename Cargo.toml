@@ -1,6 +1,6 @@
 [package]
 name = "koai"
-version = "1.0.8"
+version = "0.0.1"
 authors = ["psyche"]
 edition = "2018"
 
@@ -8,8 +8,10 @@ edition = "2018"
 
 [lib]
 name = "rs_utils"
-path = "koai/utils/text.rs"
+path = "koai/text.rs"
 crate-type = ["cdylib"]
+
+[dependencies]
 
 [dependencies.pyo3]
 version = "*"

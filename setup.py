@@ -1,12 +1,14 @@
 from setuptools import setup, find_packages
 from setuptools_rust import Binding, RustExtension
 
+
 with open("README.md", mode="r", encoding="utf-8") as readme:
     long_description = readme.read()
 
+
 setup(
     name='koai',
-    version="1.0.8.6",
+    version="0.0.1.8",
     description='Korean AI Project',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -15,7 +17,7 @@ setup(
     author_email="hkjeo13@gmail.com",
     zip_safe=False,
     license="MIT",
-
+    rust_extensions=[RustExtension("koai/rs_utils", binding=Binding.PyO3)],
     py_modules=["koai"],
 
     python_requires=">=3",
@@ -40,5 +42,4 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
     ],
-    rust_extensions=[RustExtension("koai/utils/rs_utils", binding=Binding.PyO3)],
 )
