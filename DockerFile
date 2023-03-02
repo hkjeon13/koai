@@ -1,0 +1,10 @@
+FROM hkjeon13/ubuntu:18.04
+
+RUN apt-get update
+RUN apt-get install -y python3.8 python3-pip python3-dev build-essential libssl-dev
+
+RUN python -m pip install --upgrade pip
+RUN apt-get install -y git
+RUN git clone https://github.com/hkjeon13/koai.git
+WORKDIR /koai
+RUN python -m pip install -r requirements.txt
