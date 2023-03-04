@@ -10,7 +10,7 @@ setup(
     name='koai',
     version="0.0.2.1",
     description='Korean AI Project',
-    long_description=long_description,
+    long_description="No Description",
     long_description_content_type="text/markdown",
     url="https://github.com/hkjeon13/koai",
     author="Eddie",
