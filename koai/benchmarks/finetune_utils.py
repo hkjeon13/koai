@@ -395,7 +395,33 @@ def get_example_function(
                 ]
 
             return tokenized_inputs
+    elif info.task_type == "conditional-generation":
+        def example_function(examples):
+            tokenized_inputs = tokenizer(
+                [prefix + t for t in examples.get(info.text_column)],
+                text_pair=examples.get(info.text_pair_column),
+                max_length=max_source_length,
+                truncation=truncation,
+                padding=padding,
+                is_split_into_words=info.is_split_into_words
+            )
 
+            if info.label_column in examples:
+                tokenized_labels = tokenizer(
+                    text=[example for example in examples[info.label_column]],
+                    padding=True,
+                    max_length=max_source_length,
+                    truncation=True
+                )
+
+                tokenized_inputs['labels'] = [
+                    [l if l != tokenizer.pad_token_id else -100 for l in label]
+                    for label in tokenized_labels['input_ids']
+                ]
+            else:
+                tokenized_inputs['labels'] = tokenized_inputs['input_ids'].copy()
+
+            return tokenized_inputs
 
     else:
         def example_function(examples):

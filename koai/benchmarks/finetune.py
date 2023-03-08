@@ -198,7 +198,7 @@ def finetune(
                     preprocess_eval, batched=True
                 )
         else:
-            dataset = dataset.map(info.preprocess_function, batched=True)
+            dataset = dataset.map(info.preprocess_function, batched=True, remove_columns=dataset[info.train_split].column_names)
 
         example_function = get_example_function(
             info,

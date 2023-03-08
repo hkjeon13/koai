@@ -1,5 +1,8 @@
 def default_preprocess_function(examples):
-    return examples
+    outputs = {}
+    for k, v in examples.items():
+        outputs[k] = v.copy()
+    return outputs
 
 
 def klue_sts_preprocess_function(examples):
