@@ -2,3 +2,4 @@
 *.ini
 .pytest_cache
 build
+dist
