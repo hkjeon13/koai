@@ -8,7 +8,7 @@ with open("README.md", mode="r", encoding="utf-8") as readme:
 
 setup(
     name='koai',
-    version="0.0.2.1",
+    version="0.0.2.3",
     description='Korean AI Project',
     long_description="No Description",
     long_description_content_type="text/markdown",
@@ -17,7 +17,7 @@ setup(
     author_email="hkjeo13@gmail.com",
     zip_safe=False,
     license="MIT",
-    rust_extensions=[RustExtension("koai/rs_utils", binding=Binding.PyO3)],
+    rust_extensions=[RustExtension("koai/rs_utils", binding=Binding.PyO3), RustExtension("koai/bm25", binding=Binding.PyO3)],
     py_modules=["koai"],
 
     python_requires=">=3",

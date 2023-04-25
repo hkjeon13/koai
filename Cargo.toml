@@ -11,6 +11,12 @@ name = "rs_utils"
 path = "koai/utils/text.rs"
 crate-type = ["cdylib"]
 
+
+[bm25]
+name = "bm25"
+path = "koai/utils/bm25.rs"
+crate-type = ["cdylib"]
+
 [dependencies]
 
 [dependencies.pyo3]
