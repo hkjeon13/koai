@@ -2,20 +2,18 @@ extern crate pyo3;
 use std::collections::HashMap;
 use pyo3::prelude::*;
 
-#[pyclass]
+
 struct Token {
     text: String,
     maps: HashMap<String, i32>,
 }
 
-#[pyclass]
 struct Document {
     id: String,
-    text: String,
     maps: HashMap<String, i32>,
 }
 
-#[pymethods]
+
 impl Token {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
@@ -35,7 +33,7 @@ impl Clone for Token {
     }
 }
 
-#[pymethods]
+
 impl Document {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
@@ -46,17 +44,14 @@ impl Document {
     }
 }
 
-#[pyclass]
-struct BM25 {
+pub struct BM25 {
     index: HashMap<String, Document>,
     token_index: HashMap<String, Token>,
     k1: f32,
     b: f32,
 }
 
-#[pymethods]
 impl BM25 {
-    #[new]
     fn new() -> Self {
         BM25 {
             index: HashMap::new(),
@@ -65,7 +60,8 @@ impl BM25 {
             b: 0.75,
         }
     }
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32> {
+
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
         let N = self.index.len() as f32;
         let mut score = 0.0;
         for token in tokenized_query {
@@ -73,24 +69,26 @@ impl BM25 {
                 let tf = *doc.maps.get(&token).unwrap() as f32;
                 let mut idf = self.token_index.get(&token).unwrap().maps.len() as f32;
                 idf = (((N - idf + 0.5) / (idf + 0.5))+1.0).ln();
-                score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.text.len() as f32 / avg_doc_length)))) * idf;
+                score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.maps.values().sum::<i32>() as f32 / avg_doc_length)))) * idf;
             }
         };
-        Ok(score)
+        score
     }
-    fn search(&self, tokenized_query: Vec<String>, n:usize) -> PyResult<Vec<(String, f32)>> {
-        let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)> {
+        let avg_doc_length = self.index.iter().map(|(_, doc)| doc.maps.values().sum::<i32>()).sum::<i32>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
-            (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length).unwrap())
+            (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        Ok(result.iter().take(n).map(|(id, score)| (id.to_string(), *score)).collect::<Vec<_>>())
+        result.iter().take(n as usize)
+            .map(|x|x.to_owned())
+            .collect::<Vec<(String, f32)>>()
     }
-    fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
+
+    fn add_document(&mut self, id:String, tokenized_doc: Vec<String>) {
         if !self.index.contains_key(&id) {
             let mut document = Document{
                 id: id.to_string(),
-                text: doc,
                 maps: HashMap::new(),
             };
             for token in tokenized_doc {
@@ -118,10 +116,22 @@ impl BM25 {
     }
 }
 
+
+#[pyfunction]
+fn calculate_bm25(tokenized_queries: Vec<Vec<String>>, id_candidates:Vec<(String, Vec<String>)>, n:i32)-> PyResult<Vec<Vec<(String, f32)>>>{
+    let mut bm25 = BM25::new();
+    for (id, tokenized_doc) in id_candidates {
+        bm25.add_document(id, tokenized_doc);
+    }
+    let mut result = Vec::new();
+    for tokenized_query in tokenized_queries {
+        result.push(bm25.search(tokenized_query, n));
+    }
+    Ok(result)
+}
+
 #[pymodule]
 fn rs_utils(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<BM25>()?;
-    m.add_class::<Token>()?;
-    m.add_class::<Document>()?;
+    m.add_function(wrap_pyfunction!(calculate_bm25, m)?)?;
     Ok(())
 }
