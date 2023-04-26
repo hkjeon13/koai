@@ -88,6 +88,7 @@ impl Searcher for BM25 {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result = result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        result = result.map(|(id, score)| (id, Ok(score))).collect::<Vec<_>>();
         Ok(result)
     }
 
