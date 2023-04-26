@@ -53,7 +53,7 @@ pub struct BM25 {
     b: f32,
 }
 
-
+#[pymethods]
 impl BM25 {
     #[new]
     fn new() -> Self {
