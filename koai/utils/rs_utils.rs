@@ -121,11 +121,6 @@ impl BM25 {
 #[pymodule]
 fn rs_utils(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<BM25>()?;
-    m.add_wrapped(wrap_pyfunction!(BM25::new))?;
-    m.add_wrapped(wrap_pyfunction!(BM25::search))?;
-    m.add_wrapped(wrap_pyfunction!(BM25::add_document))?;
-    m.add_wrapped(wrap_pyfunction!(BM25::remove_document))?;
-    m.add_wrapped(wrap_pyfunction!(BM25::_calculate))?;
     m.add_class::<Token>()?;
     m.add_class::<Document>()?;
 
