@@ -1,7 +1,7 @@
 extern crate pyo3;
 use std::collections::HashMap;
 use pyo3::prelude::*;
-use pyo3::{wrap_pyfunction, wrap_pymodule};
+use pyo3::wrap_pyfunction;
 
 trait Entry {
     fn add_neighbour(&mut self, neighbour: String);
