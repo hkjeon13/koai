@@ -82,13 +82,12 @@ impl Searcher for BM25 {
         }
         Ok(score)
     }
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>> {
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, Result<f32>)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result = result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        result = result.map(|(id, score)| (id, Ok(score))).collect::<Vec<_>>();
         Ok(result)
     }
 
