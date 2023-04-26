@@ -85,7 +85,12 @@ impl BM25 {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        Ok(result.iter().take(n as usize).map(|(id, score)| (id.to_string(), *score)).collect::<Vec<_>>())
+        Ok(result.iter().take(n as usize).map(|(id, score)| {
+            match score {
+                Ok(s) => (id.to_string(), *s),
+                Err(e) => return Err(e.clone().into()),
+            }
+        }).collect::<Vec<_>>())
     }
 
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
