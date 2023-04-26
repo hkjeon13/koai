@@ -68,7 +68,7 @@ pub struct BM25 {
 
 #[pymethods]
 impl Searcher for BM25 {
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32> {
         let N = self.index.len() as f32;
 
         let mut score = 0.0;
@@ -80,19 +80,19 @@ impl Searcher for BM25 {
                 score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.text.len() as f32 / avg_doc_length)))) * idf;
             }
         }
-        score
+        Ok(score)
     }
 
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)> {
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        result
+        Ok(result)
     }
 
-    fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
+    fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) -> PyResult<()> {
         if !self.index.contains_key(&id) {
             let mut document = Document{
                 id: id.to_string(),
@@ -117,15 +117,16 @@ impl Searcher for BM25 {
             }
             self.index.insert(id, document);
         }
-
+        Ok(())
     }
 
-    fn remove_document(&mut self, id:String) {
+    fn remove_document(&mut self, id:String) -> PyResult<()> {
         self.index.remove(&id);
+        Ok(())
     }
 }
 
-pub fn sliding_text_sequence(tokens:Vec<String>, window_size:usize, stride:usize) -> Vec<Vec<String>> {
+fn sliding_text_sequence(tokens:Vec<String>, window_size:usize, stride:usize) -> Vec<Vec<String>> {
     let n_iter = ((tokens.len() - window_size) as f32 / stride as f32).ceil() as usize + 1;
     let mut outputs: Vec<Vec<String>> = Vec::with_capacity(n_iter);
     for i in 0..n_iter {
