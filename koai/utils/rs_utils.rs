@@ -9,10 +9,10 @@ trait Entry {
 }
 
 trait Searcher {
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)>;
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>>;
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>);
     fn remove_document(&mut self, id:String);
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32;
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32>;
 }
 
 
@@ -68,8 +68,7 @@ pub struct BM25 {
 
 #[pymethods]
 impl Searcher for BM25 {
-    #[classmethod]
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32> {
         let N = self.index.len() as f32;
 
         let mut score = 0.0;
@@ -83,8 +82,7 @@ impl Searcher for BM25 {
         }
         score
     }
-    #[classmethod]
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)> {
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
@@ -92,7 +90,7 @@ impl Searcher for BM25 {
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         result
     }
-    #[classmethod]
+
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
         if !self.index.contains_key(&id) {
             let mut document = Document{
@@ -120,7 +118,6 @@ impl Searcher for BM25 {
         }
 
     }
-    #[classmethod]
     fn remove_document(&mut self, id:String) {
         self.index.remove(&id);
     }
