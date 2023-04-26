@@ -17,6 +17,7 @@ struct Document {
 
 #[pymethods]
 impl Token {
+    #[getter]
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
             *self.maps.get_mut(&neighbour).unwrap() += 1;
@@ -38,6 +39,7 @@ impl Clone for Token {
 
 #[pymethods]
 impl Document {
+    #[getter]
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
             *self.maps.get_mut(&neighbour).unwrap() += 1;
@@ -66,7 +68,7 @@ impl BM25 {
             b: 0.75,
         }
     }
-    #[pyfn(m)]
+    #[pyfunction]
     fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32> {
         let N = self.index.len() as f32;
         let mut score = 0.0;
@@ -80,7 +82,7 @@ impl BM25 {
         };
         Ok(score)
     }
-    #[pyfn(m)]
+    #[pyfunction]
     fn search(&self, tokenized_query: Vec<String>, n:usize) -> PyResult<Vec<(String, f32)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
@@ -89,7 +91,7 @@ impl BM25 {
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         Ok(result.iter().take(n).map(|(id, score)| (id.to_string(), *score)).collect::<Vec<_>>())
     }
-    #[pyfn(m)]
+    #[pyfunction]
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
         if !self.index.contains_key(&id) {
             let mut document = Document{
@@ -117,7 +119,7 @@ impl BM25 {
         }
 
     }
-    #[pyfn(m)]
+    #[pyfunction]
     fn remove_document(&mut self, id:String) {
         self.index.remove(&id);
     }
