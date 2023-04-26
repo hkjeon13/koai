@@ -80,7 +80,7 @@ impl Searcher for BM25 {
                 score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.text.len() as f32 / avg_doc_length)))) * idf;
             }
         }
-        Ok(score)
+        Ok(score)?
     }
     fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
@@ -88,7 +88,7 @@ impl Searcher for BM25 {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        Ok(result)
+        Ok(result)?
     }
 
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
