@@ -117,9 +117,3 @@ impl BM25 {
         self.index.remove(&id);
     }
 }
-
-#[pymodule]
-fn rs_utils(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<BM25>()?;
-    Ok(())
-}
