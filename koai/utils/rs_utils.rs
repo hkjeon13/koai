@@ -58,6 +58,7 @@ impl Entry for Document {
     }
 }
 
+#[pyclass]
 pub struct BM25 {
     index: HashMap<String, Document>,
     token_index: HashMap<String, Token>,
