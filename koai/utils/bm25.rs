@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use pyo3::prelude::*;
 
 
 trait Entry {
@@ -120,11 +119,4 @@ impl Searcher for BM25 {
     fn remove_document(&mut self, id:String) {
         self.index.remove(&id);
     }
-}
-
-
-#[pymodule]
-fn bm25(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<BM25>()?;
-    Ok(())
 }
