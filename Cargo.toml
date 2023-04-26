@@ -12,7 +12,7 @@ path = "koai/utils/text.rs"
 crate-type = ["cdylib"]
 
 
-[bm25]
+[lib]
 name = "bm25"
 path = "koai/utils/bm25.rs"
 crate-type = ["cdylib"]
