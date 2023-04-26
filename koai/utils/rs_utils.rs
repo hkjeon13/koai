@@ -92,7 +92,7 @@ impl Searcher for BM25 {
         Ok(result)
     }
 
-    fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) -> PyResult<()> {
+    fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
         if !self.index.contains_key(&id) {
             let mut document = Document{
                 id: id.to_string(),
@@ -117,12 +117,10 @@ impl Searcher for BM25 {
             }
             self.index.insert(id, document);
         }
-        Ok(())
     }
 
-    fn remove_document(&mut self, id:String) -> PyResult<()> {
+    fn remove_document(&mut self, id:String) {
         self.index.remove(&id);
-        Ok(())
     }
 }
 
