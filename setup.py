@@ -32,7 +32,7 @@ setup(
         "nltk",
         "rouge_score",
         "evaluate",
-        "sklearn",
+        "scikit-learn",
         "scipy"
     ],
     classifiers=[
