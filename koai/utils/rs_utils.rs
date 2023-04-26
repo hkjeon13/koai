@@ -3,18 +3,6 @@ use std::collections::HashMap;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
-trait Entry {
-    fn add_neighbour(&mut self, neighbour: String);
-
-}
-
-trait Searcher {
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>>;
-    fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>);
-    fn remove_document(&mut self, id:String);
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32>;
-}
-
 
 struct Token {
     text: String,
@@ -28,7 +16,7 @@ struct Document {
 }
 
 
-impl Entry for Token {
+impl Token {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
             *self.maps.get_mut(&neighbour).unwrap() += 1;
@@ -48,7 +36,7 @@ impl Clone for Token {
 }
 
 
-impl Entry for Document {
+impl Document {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
             *self.maps.get_mut(&neighbour).unwrap() += 1;
@@ -67,7 +55,7 @@ pub struct BM25 {
 }
 
 #[pymethods]
-impl Searcher for BM25 {
+impl BM25 {
     #[new]
     fn new() -> Self {
         BM25 {
