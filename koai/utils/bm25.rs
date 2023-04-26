@@ -56,7 +56,7 @@ impl Entry for Document {
     }
 }
 
-struct BM25 {
+pub struct BM25 {
     index: HashMap<String, Document>,
     token_index: HashMap<String, Token>,
     k1: f32,
