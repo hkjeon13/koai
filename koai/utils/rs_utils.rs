@@ -2,11 +2,12 @@ extern crate pyo3;
 use std::collections::HashMap;
 use pyo3::prelude::*;
 
-
+#[pyclass]
 struct Token {
     text: String,
     maps: HashMap<String, i32>,
 }
+
 #[pyclass]
 struct Document {
     id: String,
@@ -14,6 +15,7 @@ struct Document {
     maps: HashMap<String, i32>,
 }
 
+#[pymethods]
 impl Token {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
@@ -24,6 +26,7 @@ impl Token {
     }
 }
 
+#[pymethods]
 impl Clone for Token {
     fn clone(&self) -> Self {
         Token {
@@ -45,7 +48,7 @@ impl Document {
 }
 
 #[pyclass]
-pub struct BM25 {
+struct BM25 {
     index: HashMap<String, Document>,
     token_index: HashMap<String, Token>,
     k1: f32,
