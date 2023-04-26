@@ -8,7 +8,7 @@ with open("README.md", mode="r", encoding="utf-8") as readme:
 
 setup(
     name='koai',
-    version="0.0.2.4",
+    version="0.0.2.5",
     description='Korean AI Project',
     long_description="No Description",
     long_description_content_type="text/markdown",
