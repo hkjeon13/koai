@@ -9,10 +9,10 @@ trait Entry {
 }
 
 trait Searcher {
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)>;
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Result<Vec<(String, f32)>, PyErr>;
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>);
     fn remove_document(&mut self, id:String);
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32;
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> Result<f32, PyErr>;
 }
 
 
