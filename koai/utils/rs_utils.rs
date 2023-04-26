@@ -77,12 +77,13 @@ impl BM25 {
         };
         Ok(score)
     }
-    fn search(&self, tokenized_query: Vec<String>) -> PyResult<Vec<(String, f32)>> {
+    fn search(&self, tokenized_query: Vec<String>, n:usize) -> PyResult<Vec<(String, f32)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length).unwrap())
         }).collect::<Vec<_>>();
-        Ok(result)
+        result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        Ok(result.iter().take(n).map(|(id, score)| (id.to_string(), *score)).collect::<Vec<_>>())
     }
 
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
