@@ -1,7 +1,7 @@
 extern crate pyo3;
 use std::collections::HashMap;
 use pyo3::prelude::*;
-use pyo3::{wrap_pyfunction};
+use pyo3::{wrap_pyfunction, wrap_pymodule};
 
 trait Entry {
     fn add_neighbour(&mut self, neighbour: String);
@@ -9,10 +9,10 @@ trait Entry {
 }
 
 trait Searcher {
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Result<Vec<(String, f32)>, PyErr>;
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)>;
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>);
     fn remove_document(&mut self, id:String);
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> Result<f32, PyErr>;
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32;
 }
 
 
@@ -68,7 +68,8 @@ pub struct BM25 {
 
 #[pymethods]
 impl Searcher for BM25 {
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32> {
+    #[classmethod]
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
         let N = self.index.len() as f32;
 
         let mut score = 0.0;
@@ -80,18 +81,18 @@ impl Searcher for BM25 {
                 score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.text.len() as f32 / avg_doc_length)))) * idf;
             }
         }
-        Ok(score)
+        score
     }
-
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>> {
+    #[classmethod]
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        Ok(result)
+        result
     }
-
+    #[classmethod]
     fn add_document(&mut self, id:String, doc: String, tokenized_doc: Vec<String>) {
         if !self.index.contains_key(&id) {
             let mut document = Document{
@@ -117,8 +118,9 @@ impl Searcher for BM25 {
             }
             self.index.insert(id, document);
         }
-    }
 
+    }
+    #[classmethod]
     fn remove_document(&mut self, id:String) {
         self.index.remove(&id);
     }
