@@ -123,6 +123,5 @@ fn rs_utils(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<BM25>()?;
     m.add_class::<Token>()?;
     m.add_class::<Document>()?;
-
     Ok(())
 }
