@@ -1,7 +1,7 @@
 extern crate pyo3;
 use std::collections::HashMap;
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
+use pyo3::{wrap_pyfunction, wrap_pymodule};
 
 trait Entry {
     fn add_neighbour(&mut self, neighbour: String);
@@ -66,6 +66,7 @@ pub struct BM25 {
     b: f32,
 }
 
+#[pymethods]
 impl Searcher for BM25 {
     fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
         let N = self.index.len() as f32;
