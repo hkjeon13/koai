@@ -80,7 +80,7 @@ impl BM25 {
     fn search(&self, tokenized_query: Vec<String>) -> PyResult<Vec<(String, f32)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.text.len()).sum::<usize>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
-            (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
+            (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length).unwrap())
         }).collect::<Vec<_>>();
         Ok(result)
     }
