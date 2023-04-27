@@ -156,6 +156,20 @@ impl BM25 {
         Ok(result.iter().take(n as usize).map(|x|x.to_owned()).collect::<Vec<(String, f32)>>())
     }
 
+    fn batch_search(&self, tokenized_queries: Vec<Vec<String>>, n: i32) -> PyResult<Vec<Vec<(String, f32)>>> {
+        let avg_doc_length = self.index.iter().map(|(_, doc)| doc.maps.values().sum::<i32>()).sum::<i32>() as f32 / self.index.len() as f32;
+        let mut result = Vec::new();
+        for tokenized_query in tokenized_queries {
+            let mut query_result = self.index.iter().map(|(id, doc)| {
+                (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
+            }).collect::<Vec<_>>();
+            query_result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+            result.push(query_result.iter().take(n as usize).map(|x|x.to_owned()).collect::<Vec<(String, f32)>>());
+        }
+        Ok(result)
+    }
+
+
 
     fn add_documents(&mut self, tokenized_docs: Vec<(String, Vec<String>)>){
         tokenized_docs.iter().for_each(|(id, tokenized_doc)| {
