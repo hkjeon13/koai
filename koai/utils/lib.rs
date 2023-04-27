@@ -52,7 +52,6 @@ pub struct BM25 {
     b: f32,
 }
 
-
 #[pymethods]
 impl BM25 {
     #[new]
@@ -90,6 +89,8 @@ impl BM25 {
             .collect::<Vec<(String, f32)>>()
         )
     }
+
+
 
     fn build_from_corpus(&mut self, tokenized_docs: Vec<(String, Vec<String>)>){
         tokenized_docs.par_iter().for_each(|(id, tokenized_doc)| {
