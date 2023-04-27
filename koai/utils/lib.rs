@@ -3,19 +3,19 @@ use std::collections::HashMap;
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+#[pyclass]
 struct Token {
     text: String,
     maps: HashMap<String, i32>,
 }
 
 #[pyclass]
-#[derive(Clone)]
 struct Document {
     id: String,
     maps: HashMap<String, i32>,
 }
 
-
+#[pymethods]
 impl Token {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
@@ -26,6 +26,7 @@ impl Token {
     }
 }
 
+#[pymethods]
 impl Clone for Token {
     fn clone(&self) -> Self {
         Token {
