@@ -1,13 +1,17 @@
 extern crate pyo3;
 use std::collections::HashMap;
 use pyo3::prelude::*;
+use serde_derive::{Serialize,Deserialize};
+use std::path::Path;
 
+#[derive(Serialize, Deserialize, Debug)]
 struct Token {
     text: String,
     maps: HashMap<String, i32>,
 }
 
 #[pyclass]
+#[derive(Serialize, Deserialize, Debug)]
 struct Document {
     id: String,
     maps: HashMap<String, i32>,
@@ -61,6 +65,32 @@ impl BM25 {
             k1: 1.2,
             b: 0.75,
         }
+    }
+    fn save_index(&self, path: &str) {
+        let json = serde_json::to_string(&self.index).unwrap();
+        std::fs::write(path, json).expect("Unable to write file");
+    }
+
+    fn save_token_index(&self, path: &str) {
+        let json = serde_json::to_string(&self.token_index).unwrap();
+        std::fs::write(path, json).expect("Unable to write file");
+    }
+
+    fn save(&self, save_directory: &str) {
+        self.save_index(Path::new(save_directory).join("index.json").to_str().unwrap());
+        self.save_token_index(Path::new(save_directory).join("token_index.json").to_str().unwrap());
+        println!("Saved index with {} documents and {} tokens", self.index.len(), self.token_index.len());
+    }
+
+    fn load(&mut self, load_directory: &str) {
+        let index_path = Path::new(load_directory).join("index.json");
+        let token_index_path = Path::new(load_directory).join("token_index.json");
+        let index_json = std::fs::read_to_string(index_path).expect("Unable to read file");
+        let token_index_json = std::fs::read_to_string(token_index_path).expect("Unable to read file");
+        self.index = serde_json::from_str(&index_json).unwrap();
+        self.token_index = serde_json::from_str(&token_index_json).unwrap();
+        println!("Loaded index with {} documents and {} tokens", self.index.len(), self.token_index.len());
+
     }
 
     fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
