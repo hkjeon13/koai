@@ -1,7 +1,6 @@
 extern crate pyo3;
 use std::collections::HashMap;
 use pyo3::prelude::*;
-use rayon::prelude::*;
 
 struct Token {
     text: String,
@@ -65,13 +64,13 @@ impl BM25 {
     }
 
     fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
-        let N = self.index.len() as f32;
+        let num_doc = self.index.len() as f32;
         let mut score = 0.0;
         for token in tokenized_query {
             if doc.maps.contains_key(&token) {
                 let tf = *doc.maps.get(&token).unwrap() as f32;
                 let mut idf = self.token_index.get(&token).unwrap().maps.len() as f32;
-                idf = (((N - idf + 0.5) / (idf + 0.5))+1.0).ln();
+                idf = (((num_doc - idf + 0.5) / (idf + 0.5))+1.0).ln();
                 score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.maps.values().sum::<i32>() as f32 / avg_doc_length)))) * idf;
             }
         };
@@ -91,9 +90,8 @@ impl BM25 {
     }
 
 
-
     fn build_from_corpus(&mut self, tokenized_docs: Vec<(String, Vec<String>)>){
-        tokenized_docs.par_iter().for_each(|(id, tokenized_doc)| {
+        tokenized_docs.iter().for_each(|(id, tokenized_doc)| {
             self.add_document(id.to_string(), tokenized_doc.to_vec());
         });
     }

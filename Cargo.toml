@@ -13,7 +13,6 @@ crate-type = ["cdylib"]
 
 
 [dependencies]
-rayon = "*"
 
 [dependencies.pyo3]
 version = "*"
