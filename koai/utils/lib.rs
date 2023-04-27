@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
-#[pyclass]
 struct Token {
     text: String,
     maps: HashMap<String, i32>,
@@ -15,7 +14,6 @@ struct Document {
     maps: HashMap<String, i32>,
 }
 
-#[pymethods]
 impl Token {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
@@ -26,7 +24,6 @@ impl Token {
     }
 }
 
-#[pymethods]
 impl Clone for Token {
     fn clone(&self) -> Self {
         Token {
@@ -69,12 +66,12 @@ impl BM25 {
     }
     #[getter]
     fn get_index(&self) -> PyResult<HashMap<String, Document>> {
-        Ok(self.index.clone())
+        Ok(self.index)
     }
 
     #[getter]
     fn get_token_index(&self) -> PyResult<HashMap<String, Token>> {
-        Ok(self.token_index.clone())
+        Ok(self.token_index)
     }
 
     fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
