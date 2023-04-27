@@ -64,7 +64,7 @@ impl BM25 {
         }
     }
 
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
+    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> PyResult<f32> {
         let N = self.index.len() as f32;
         let mut score = 0.0;
         for token in tokenized_query {
@@ -75,17 +75,18 @@ impl BM25 {
                 score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.maps.values().sum::<i32>() as f32 / avg_doc_length)))) * idf;
             }
         };
-        score
+        Ok(score)
     }
-    fn search(&self, tokenized_query: Vec<String>, n: i32) -> Vec<(String, f32)> {
+    fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>> {
         let avg_doc_length = self.index.iter().map(|(_, doc)| doc.maps.values().sum::<i32>()).sum::<i32>() as f32 / self.index.len() as f32;
         let mut result = self.index.iter().map(|(id, doc)| {
             (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
         }).collect::<Vec<_>>();
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        result.iter().take(n as usize)
-            .map(|x|x.to_owned())
+        Ok(
+            result.iter().take(n as usize).map(|x|x.to_owned())
             .collect::<Vec<(String, f32)>>()
+        )
     }
 
     fn add_document(&mut self, id:String, tokenized_doc: Vec<String>) {
@@ -119,23 +120,8 @@ impl BM25 {
     }
 }
 
-
-#[pyfunction]
-fn calculate_bm25(tokenized_queries: Vec<Vec<String>>, id_candidates:Vec<(String, Vec<String>)>, n:i32)-> PyResult<Vec<Vec<(String, f32)>>>{
-    let mut bm25 = BM25::new();
-    for (id, tokenized_doc) in id_candidates {
-        bm25.add_document(id, tokenized_doc);
-    }
-    let mut result = Vec::new();
-    for tokenized_query in tokenized_queries {
-        result.push(bm25.search(tokenized_query, n));
-    }
-    Ok(result)
-}
-
 #[pymodule]
 fn rs_utils(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<BM25>()?;
-    m.add_function(wrap_pyfunction!(calculate_bm25, m)?)?;
     Ok(())
 }
