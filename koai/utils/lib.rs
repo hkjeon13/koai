@@ -7,7 +7,9 @@ struct Token {
     text: String,
     maps: HashMap<String, i32>,
 }
+
 #[pyclass]
+#[derive(Clone)]
 struct Document {
     id: String,
     maps: HashMap<String, i32>,
