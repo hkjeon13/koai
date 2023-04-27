@@ -44,6 +44,7 @@ impl Document {
     }
 }
 
+#[pyclass]
 pub struct BM25 {
     index: HashMap<String, Document>,
     token_index: HashMap<String, Token>,
@@ -51,7 +52,9 @@ pub struct BM25 {
     b: f32,
 }
 
+#[pymethods]
 impl BM25 {
+    #[new]
     fn new() -> Self {
         BM25 {
             index: HashMap::new(),
@@ -132,6 +135,7 @@ fn calculate_bm25(tokenized_queries: Vec<Vec<String>>, id_candidates:Vec<(String
 
 #[pymodule]
 fn rs_utils(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_class::<BM25>()?;
     m.add_function(wrap_pyfunction!(calculate_bm25, m)?)?;
     Ok(())
 }
