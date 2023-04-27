@@ -64,13 +64,6 @@ impl BM25 {
             b: 0.75,
         }
     }
-    fn get_index(&self) -> PyResult<HashMap<String, Document>> {
-        Ok(self.index)
-    }
-
-    fn get_token_index(&self) -> PyResult<HashMap<String, Token>> {
-        Ok(self.token_index)
-    }
 
     fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
         let N = self.index.len() as f32;
