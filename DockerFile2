@@ -4,7 +4,7 @@ WORKDIR koai/
 RUN git fetch --all && git pull origin main
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
+
 RUN python3.8 setup.py bdist_wheel && \
     python3.9 setup.py bdist_wheel && \
-    python3.10 setup.py bdist_wheel && \
-    python3 -m auditwheel repair dist/koai-*-cp*-cp*-linux*.whl --plat manylinux_2_34_aarch64
+    python3 -m auditwheel repair dist/koai-*-cp*-cp*-linux*.whl --plat manylinux_2_34_x86_64
