@@ -17,7 +17,7 @@ setup(
     author_email="hkjeo13@gmail.com",
     zip_safe=False,
     license="MIT",
-    rust_extensions=[RustExtension("koai/rs_utils.rs", binding=Binding.PyO3)],
+    rust_extensions=[RustExtension("koai/lib", binding=Binding.PyO3)],
     py_modules=["koai"],
 
     python_requires=">=3",

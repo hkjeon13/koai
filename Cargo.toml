@@ -8,7 +8,7 @@ edition = "2018"
 
 [lib]
 name = "rs_utils"
-path = "koai/utils/rs_utils.rs"
+path = "koai/utils/lib.rs"
 crate-type = ["cdylib"]
 
 
