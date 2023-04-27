@@ -26,6 +26,14 @@ impl Token {
             self.maps.insert(neighbour.to_string(), 1);
         }
     }
+    fn remove_neighbour(&mut self, neighbour: &str) {
+        if self.maps.contains_key(neighbour) {
+            *self.maps.get_mut(neighbour).unwrap() -= 1;
+        }
+        if self.maps.get(neighbour).unwrap() == &0 {
+            self.maps.remove(neighbour);
+        }
+    }
 }
 
 impl Clone for Token {
@@ -201,9 +209,13 @@ impl BM25 {
 
     fn remove_documents(&mut self, ids:Vec<String>) {
         for id in ids {
+            let doc = self.index.get(&id).unwrap();
+            for token in doc.maps.keys() {
+                self.token_index.get(token).unwrap().remove_neighbour(&id);
+            }
             self.index.remove(&id);
         }
-
+        self.freeze();
     }
 }
 
