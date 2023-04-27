@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use pyo3::prelude::*;
 use serde_derive::{Serialize,Deserialize};
 use std::path::Path;
+use counter::Counter;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Token {
@@ -18,11 +19,11 @@ struct Document {
 }
 
 impl Token {
-    fn add_neighbour(&mut self, neighbour: String) {
-        if self.maps.contains_key(&neighbour) {
-            *self.maps.get_mut(&neighbour).unwrap() += 1;
+    fn add_neighbour(&mut self, neighbour: &str) {
+        if self.maps.contains_key(neighbour) {
+            *self.maps.get_mut(neighbour).unwrap() += 1;
         } else {
-            self.maps.insert(neighbour, 1);
+            self.maps.insert(neighbour.to_string(), 1);
         }
     }
 }
@@ -38,12 +39,15 @@ impl Clone for Token {
 
 #[pymethods]
 impl Document {
-    fn add_neighbour(&mut self, neighbour: String) {
-        if self.maps.contains_key(&neighbour) {
-            *self.maps.get_mut(&neighbour).unwrap() += 1;
+    fn add_neighbour(&mut self, neighbour: &str) {
+        if self.maps.contains_key(neighbour) {
+            *self.maps.get_mut(neighbour).unwrap() += 1;
         } else {
-            self.maps.insert(neighbour, 1);
+            self.maps.insert(neighbour.to_string(), 1);
         }
+    }
+    fn len(&self) -> usize {
+        self.maps.values().sum::<i32>() as usize
     }
 }
 
@@ -51,6 +55,8 @@ impl Document {
 pub struct BM25 {
     index: HashMap<String, Document>,
     token_index: HashMap<String, Token>,
+    map_bm25: HashMap<String, HashMap<String, f32>>,
+    average_length: f32,
     k1: f32,
     b: f32,
 }
@@ -62,10 +68,13 @@ impl BM25 {
         BM25 {
             index: HashMap::new(),
             token_index: HashMap::new(),
+            map_bm25: HashMap::new(),
+            average_length: 0.0,
             k1: 1.2,
             b: 0.75,
         }
     }
+
     fn save_index(&self, path: &str) {
         let json = serde_json::to_string(&self.index).unwrap();
         std::fs::write(path, json).expect("Unable to write file");
@@ -93,34 +102,62 @@ impl BM25 {
 
     }
 
-    fn _calculate(&self, tokenized_query: Vec<String>, doc: &Document, avg_doc_length:f32) -> f32 {
-        let num_doc = self.index.len() as f32;
-        let mut score = 0.0;
-        for token in tokenized_query {
-            if doc.maps.contains_key(&token) {
-                let tf = *doc.maps.get(&token).unwrap() as f32;
-                let mut idf = self.token_index.get(&token).unwrap().maps.len() as f32;
-                idf = (((num_doc - idf + 0.5) / (idf + 0.5))+1.0).ln();
-                score += (tf * (1.0 + self.k1) / (tf + self.k1 * ((1.-self.b) + self.b * (doc.maps.values().sum::<i32>() as f32 / avg_doc_length)))) * idf;
-            }
-        };
-        score
+    fn calculate_score(&self, tokenized_query: &Vec<String>, doc: &Document) -> f32 {
+        let temp = HashMap::new();
+        tokenized_query.iter().map(|token|self.map_bm25.get(token).unwrap_or(&temp).get(&doc.id).unwrap_or(&0.0)).sum::<f32>()
+    }
+
+
+    fn freeze(&mut self) {
+        let temp = Token { text: "".to_string(), maps: HashMap::new()};
+        let num_docs = self.index.len() as f32;
+        self.average_length = self.index.iter().map(|(_, doc)| doc.len()).sum::<usize>() as f32 / num_docs;
+
+        fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, idf: f32) -> f32 {
+            (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
+        }
+
+        self.map_bm25 = self.token_index.iter().map(
+            |(token, tobj)|
+                (
+                    token.to_string(),
+                    tobj.maps.iter().map(|(doc_id,tf)| {
+                        (
+                            doc_id.to_string(),
+                            _calculate(
+                                *tf as f32,
+                                num_docs,
+                                self.index.get(doc_id).unwrap().len(),
+                                self.average_length,
+                                self.k1,
+                                self.b,
+                                self.token_index.get(token).unwrap_or(&temp).maps.len() as f32
+                            )
+                        )
+                    }).collect::<HashMap<String, f32>>()
+                )
+
+        ).collect::<HashMap<String,HashMap<String, f32>>>()
+
+
     }
 
     fn search(&self, tokenized_query: Vec<String>, n: i32) -> PyResult<Vec<(String, f32)>> {
-        let avg_doc_length = self.index.iter().map(|(_, doc)| doc.maps.values().sum::<i32>()).sum::<i32>() as f32 / self.index.len() as f32;
+        if self.map_bm25.is_empty() {
+            panic!("Please freeze the index before searching(run 'freeze()' function)");
+        }
+
         let mut result = self.index.iter().map(|(id, doc)| {
-            (id.to_string(), self._calculate(tokenized_query.clone(), doc, avg_doc_length))
+            (id.to_string(), self.calculate_score(&tokenized_query, doc))
         }).collect::<Vec<_>>();
+
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        Ok(
-            result.iter().take(n as usize).map(|x|x.to_owned())
-            .collect::<Vec<(String, f32)>>()
-        )
+
+        Ok(result.iter().take(n as usize).map(|x|x.to_owned()).collect::<Vec<(String, f32)>>())
     }
 
 
-    fn build_from_corpus(&mut self, tokenized_docs: Vec<(String, Vec<String>)>){
+    fn add_documents(&mut self, tokenized_docs: Vec<(String, Vec<String>)>){
         tokenized_docs.iter().for_each(|(id, tokenized_doc)| {
             self.add_document(id.to_string(), tokenized_doc.to_vec());
         });
@@ -133,28 +170,26 @@ impl BM25 {
                 maps: HashMap::new(),
             };
             for token in tokenized_doc {
-                document.add_neighbour(token.to_string());
+                document.add_neighbour(&token);
                 if !self.token_index.contains_key(token.as_str()){
-                    let mut token_object = Token{
-                        text: token.to_string(),
-                        maps: HashMap::new(),
-                    };
-                    token_object.add_neighbour(id.to_string());
-                    self.token_index.insert(token, token_object.clone());
-
-                } else {
-                    let token_object = self.token_index.get_mut(token.as_str()).unwrap();
-                    token_object.add_neighbour(id.to_string());
+                    let mut obj = Token { text: token.to_string(), maps: HashMap::new()};
+                    obj.add_neighbour(&id);
+                    self.token_index.insert(token, obj);
+                } else{
+                    self.token_index.get_mut(token.as_str()).unwrap().add_neighbour(&id);
 
                 }
             }
-            self.index.insert(id, document);
+            self.index.insert(id.to_string(), document);
         }
 
     }
 
-    fn remove_document(&mut self, id:String) {
-        self.index.remove(&id);
+    fn remove_documents(&mut self, ids:Vec<String>) {
+        for id in ids {
+            self.index.remove(&id);
+        }
+
     }
 }
 
