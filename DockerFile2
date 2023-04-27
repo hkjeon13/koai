@@ -1,6 +1,7 @@
 FROM hkjeon13/koai-x86-env:latest
 RUN git clone https://github.com/hkjeon13/koai.git
 WORKDIR koai/
+RUN git fetch --all && git pull origin main
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN python3.8 setup.py bdist_wheel && \

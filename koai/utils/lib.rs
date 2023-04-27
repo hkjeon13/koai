@@ -100,11 +100,10 @@ impl BM25 {
         )
     }
 
-    fn build_from_corpus(&mut self, tokenized_docs: Vec<(String, Vec<String>)>) -> PyResult<()>{
+    fn build_from_corpus(&mut self, tokenized_docs: Vec<(String, Vec<String>)>){
         tokenized_docs.par_iter().for_each(|(id, tokenized_doc)| {
             self.add_document(id.to_string(), tokenized_doc.to_vec());
         });
-        Ok(())
     }
 
     fn add_document(&mut self, id:String, tokenized_doc: Vec<String>) {
