@@ -7,7 +7,7 @@ struct Token {
     text: String,
     maps: HashMap<String, i32>,
 }
-
+#[pyclass]
 struct Document {
     id: String,
     maps: HashMap<String, i32>,
@@ -33,7 +33,7 @@ impl Clone for Token {
     }
 }
 
-
+#[pymethods]
 impl Document {
     fn add_neighbour(&mut self, neighbour: String) {
         if self.maps.contains_key(&neighbour) {
