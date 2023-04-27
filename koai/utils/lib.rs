@@ -64,12 +64,10 @@ impl BM25 {
             b: 0.75,
         }
     }
-    #[getter]
     fn get_index(&self) -> PyResult<HashMap<String, Document>> {
         Ok(self.index)
     }
 
-    #[getter]
     fn get_token_index(&self) -> PyResult<HashMap<String, Token>> {
         Ok(self.token_index)
     }
