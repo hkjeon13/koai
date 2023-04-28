@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use pyo3::prelude::*;
 use serde_derive::{Serialize,Deserialize};
 use std::path::Path;
-use counter::Counter;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Token {
@@ -110,11 +109,6 @@ impl BM25 {
 
     }
 
-    fn calculate_score(&self, tokenized_query: &Vec<String>, doc: &Document) -> f32 {
-        let temp = HashMap::new();
-        tokenized_query.iter().map(|token|self.map_bm25.get(token).unwrap_or(&temp).get(&doc.id).unwrap_or(&0.0)).sum::<f32>()
-    }
-
 
     fn freeze(&mut self) {
         let temp = Token { text: "".to_string(), maps: HashMap::new()};
@@ -154,9 +148,9 @@ impl BM25 {
         if self.map_bm25.is_empty() {
             panic!("Please freeze the index before searching(run 'freeze()' function)");
         }
-
+        let temp = HashMap::new();
         let mut result = self.index.iter().map(|(id, doc)| {
-            (id.to_string(), self.calculate_score(&tokenized_query, doc))
+            (id.to_string(), tokenized_query.iter().map(|token|self.map_bm25.get(token).unwrap_or(&temp).get(&doc.id).unwrap_or(&0.0)).sum::<f32>())
         }).collect::<Vec<_>>();
 
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
