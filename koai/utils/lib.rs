@@ -192,7 +192,7 @@ impl BM25 {
         for id in ids {
             let doc = self.index.get(&id).unwrap();
             for token in doc.maps.keys() {
-                self.token_index.get(token).unwrap().remove_neighbour(&id);
+                self.token_index.get_mut(token).unwrap().remove_neighbour(&id);
             }
             self.index.remove(&id);
         }
