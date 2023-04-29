@@ -65,6 +65,10 @@ pub struct BM25 {
     b: f32,
 }
 
+fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, idf: f32) -> f32 {
+    (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
+}
+
 #[pymethods]
 impl BM25 {
     fn new() -> Self {
@@ -109,10 +113,6 @@ impl BM25 {
         let mut map_bm25 = HashMap::new();
         let average_doc_length = self.index.values().map(|doc| doc.len()).sum::<usize>() as f32 / self.index.len() as f32;
 
-        fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, idf: f32) -> f32 {
-            (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
-        }
-
         for (token, token_obj) in tqdm_rs::Tqdm::new(self.token_index.iter()){
             let idf = token_obj.maps.len() as f32;
             for (doc_id, freq) in token_obj.maps.iter() {
@@ -146,7 +146,9 @@ impl BM25 {
             )
         ).collect::<Vec<(String, f32)>>();
 
-        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        results.sort_by(
+            |a, b| b.1.partial_cmp(&a.1).unwrap()
+        );
         results.truncate(n);
         results
     }
@@ -163,9 +165,6 @@ impl BM25 {
             }
         };
 
-        fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, idf: f32) -> f32 {
-            (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
-        }
         let mut results: Vec<(String, f32)> = Vec::new();
         println!("length of document:{:?}, length of tokens:{:?}, total iteration:{:?}", candidate_docs.len(), unique_tokens.len(), candidate_docs.len() * unique_tokens.len());
         for doc_id in candidate_docs.iter() {
@@ -173,9 +172,9 @@ impl BM25 {
             for (&token, &freq) in unique_tokens.iter() {
                 let mut score = 0.0;
                 if self.token_index.contains_key(token) {
-                    let token = self.token_index.get(token).unwrap();
-                    let tf = token.maps.get(doc_id).unwrap_or(&0).to_owned() as f32;
-                    let idf = token.maps.len() as f32;
+                    let _map = self.token_index.get(token).unwrap().maps;
+                    let tf = _map.get(doc_id).unwrap_or(&0).to_owned() as f32;
+                    let idf = _map.len() as f32;
                     let doc_len = self.index.get(doc_id).unwrap().len();
                     score += _calculate(tf, self.index.len() as f32, doc_len, average_doc_length, self.k1, self.b, idf) * freq as f32;
                 }
