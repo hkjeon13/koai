@@ -153,7 +153,7 @@ impl BM25 {
 
     fn search_instance(&self, tokenized_query: Vec<String>, n: usize) -> Vec<(String, f32)> {
         let average_doc_length = self.index.values().map(|doc| doc.len()).sum::<usize>() as f32 / self.index.len() as f32;
-        let mut unique_tokens = tokenized_query.iter().collect::<Counter<_>>();
+        let unique_tokens = tokenized_query.iter().collect::<Counter<_>>();
         let mut candidate_docs = HashSet::new();
         for &token in unique_tokens.keys() {
             if self.token_index.contains_key(token) {
@@ -170,7 +170,7 @@ impl BM25 {
             for (&token, &freq) in unique_tokens.iter() {
                 let mut score = 0.0;
                 if self.token_index.contains_key(token) {
-                    let _map = self.token_index.get(token).unwrap().maps;
+                    let _map = &self.token_index.get(token).unwrap().maps;
                     let tf = _map.get(doc_id).unwrap_or(&0).to_owned() as f32;
                     let idf = _map.len() as f32;
                     let doc_len = self.index.get(doc_id).unwrap().len();
