@@ -68,6 +68,7 @@ fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f3
 
 #[pymethods]
 impl BM25 {
+    #[new]
     fn new() -> Self {
         BM25 {
             index: HashMap::new(),
