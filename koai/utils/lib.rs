@@ -2,11 +2,9 @@ extern crate pyo3;
 use pyo3::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
 use serde_derive::{Serialize,Deserialize};
 use std::path::Path;
 use tqdm_rs;
-use std::time::Instant;
 use counter::Counter;
 
 
@@ -215,7 +213,7 @@ impl BM25 {
                     obj.add_neighbour(&id, freq as i32);
                     self.token_index.insert(token.to_string(), obj);
                 } else{
-                    self.token_index.get_mut(token.as_str()).unwrap().add_neighbour(&id, freq as i32);
+                    self.token_index.get_mut(token).unwrap().add_neighbour(&id, freq as i32);
                 }
             }
             self.index.insert(id.to_string(), document);
