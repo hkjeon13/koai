@@ -1,7 +1,6 @@
 extern crate pyo3;
 use pyo3::prelude::*;
 use std::collections::{HashMap, HashSet};
-use std::fs::File;
 use serde_derive::{Serialize,Deserialize};
 use std::path::Path;
 use tqdm_rs;
