@@ -49,7 +49,6 @@ impl Token {
     }
 }
 
-#[pymethods]
 impl Clone for Token {
     fn clone(&self) -> Self {
         Token {
