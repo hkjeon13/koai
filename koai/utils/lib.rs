@@ -1,12 +1,20 @@
 extern crate pyo3;
 use pyo3::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read};
 use serde_derive::{Serialize,Deserialize};
 use std::path::Path;
 use tqdm_rs;
+use std::time::Instant;
 use counter::Counter;
+use rayon::prelude::*;
 
+fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, idf: f32) -> f32 {
+    (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
+}
 
+#[pyclass]
 #[derive(Serialize, Deserialize, Debug)]
 struct Token {
     text: String,
@@ -20,6 +28,17 @@ struct Document {
     maps: HashMap<String, i32>,
 }
 
+#[pyclass]
+pub struct BM25 {
+    index: HashMap<String, Document>,
+    token_index: HashMap<String, Token>,
+    map_bm25: HashMap<String, f32>,
+    k1: f32,
+    b: f32,
+    average_length: f32,
+}
+
+#[pymethods]
 impl Token {
     fn add_neighbour(&mut self, neighbour: &str, value:i32) {
         if self.maps.contains_key(neighbour) {
@@ -30,6 +49,7 @@ impl Token {
     }
 }
 
+#[pymethods]
 impl Clone for Token {
     fn clone(&self) -> Self {
         Token {
@@ -53,19 +73,6 @@ impl Document {
     }
 }
 
-#[pyclass]
-pub struct BM25 {
-    index: HashMap<String, Document>,
-    token_index: HashMap<String, Token>,
-    map_bm25: HashMap<String, f32>,
-    k1: f32,
-    b: f32,
-}
-
-fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, idf: f32) -> f32 {
-    (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
-}
-
 #[pymethods]
 impl BM25 {
     #[new]
@@ -76,6 +83,7 @@ impl BM25 {
             map_bm25: HashMap::new(),
             k1: 1.2,
             b: 0.75,
+            average_length: 0.0,
         }
     }
 
@@ -121,39 +129,29 @@ impl BM25 {
             }
         }
         self.map_bm25 = map_bm25;
-        println!("The number of index that was freezed:{:?}", self.map_bm25.len())
+        self.average_length = self.index.values().map(|doc| doc.len()).sum::<usize>() as f32 / self.index.len() as f32;
+        println!("The number of index that was freezed:{:?}", self.map_bm25.len());
+
     }
 
-    fn search(&self, tokenized_quries: Vec<String>, n: usize) -> Vec<(String, f32)> {
-        let mut unique_tokens = tokenized_quries.iter().collect::<Counter<_>>();
-        let mut candidate_docs = HashSet::new();
-        for &token in unique_tokens.keys() {
-            if self.token_index.contains_key(token) {
-                for doc in self.token_index.get(token).unwrap().maps.keys() {
-                    candidate_docs.insert(doc.to_string());
+    fn search(&self, tokenized_quries: Vec<String>, n: usize) -> PyResult<Vec<(String, f32)>> {
+        let mut results = Vec::new();
+        for (&query, _) in tokenized_quries.iter().collect::<Counter<_>>().iter() {
+            if self.token_index.contains_key(query) {
+                for (doc_id, _) in self.token_index.get(query).unwrap().maps.iter() {
+                    let score = self.map_bm25.get(&*(doc_id.to_owned() + "@" + query.to_string().as_str())).unwrap_or(&0.0);
+                    results.push((doc_id.to_string(), score.to_owned()));
                 }
             }
-        };
-
-        let mut results = candidate_docs.iter().map(
-            |doc_id| (
-                doc_id.to_string(),
-                tokenized_quries.iter().map(|token|
-                    self.map_bm25.get(&*(doc_id.to_owned() + "@" + token.to_string().as_str())).unwrap_or(&0.0)
-                ).sum::<f32>()
-            )
-        ).collect::<Vec<(String, f32)>>();
-
-        results.sort_by(
-            |a, b| b.1.partial_cmp(&a.1).unwrap()
-        );
+        }
+        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         results.truncate(n);
-        results
+        Ok(results)
     }
 
-    fn search_instance(&self, tokenized_query: Vec<String>, n: usize) -> Vec<(String, f32)> {
+    fn search_instance(&self, tokenized_query: Vec<String>, n: usize) -> PyResult<Vec<(String, f32)>> {
         let average_doc_length = self.index.values().map(|doc| doc.len()).sum::<usize>() as f32 / self.index.len() as f32;
-        let unique_tokens = tokenized_query.iter().collect::<Counter<_>>();
+        let mut unique_tokens = tokenized_query.iter().collect::<Counter<_>>();
         let mut candidate_docs = HashSet::new();
         for &token in unique_tokens.keys() {
             if self.token_index.contains_key(token) {
@@ -164,15 +162,15 @@ impl BM25 {
         };
 
         let mut results: Vec<(String, f32)> = Vec::new();
-        println!("length of document:{:?}, length of tokens:{:?}, total iteration:{:?}", candidate_docs.len(), unique_tokens.len(), candidate_docs.len() * unique_tokens.len());
+
         for doc_id in candidate_docs.iter() {
             let mut scores = Vec::new();
             for (&token, &freq) in unique_tokens.iter() {
                 let mut score = 0.0;
                 if self.token_index.contains_key(token) {
-                    let _map = &self.token_index.get(token).unwrap().maps;
-                    let tf = _map.get(doc_id).unwrap_or(&0).to_owned() as f32;
-                    let idf = _map.len() as f32;
+                    let token = self.token_index.get(token).unwrap();
+                    let tf = token.maps.get(doc_id).unwrap_or(&0).to_owned() as f32;
+                    let idf = token.maps.len() as f32;
                     let doc_len = self.index.get(doc_id).unwrap().len();
                     score += _calculate(tf, self.index.len() as f32, doc_len, average_doc_length, self.k1, self.b, idf) * freq as f32;
                 }
@@ -182,21 +180,21 @@ impl BM25 {
         };
         results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         results.truncate(n);
-        results
+        Ok(results)
     }
 
-    fn batch_search(&self, tokenized_queries: Vec<Vec<String>>, n: usize) -> Vec<Vec<(String, f32)>> {
-        let mut scores = Vec::new();
-        for tokenized_query in tqdm_rs::Tqdm::new(tokenized_queries.iter()){
-            scores.push(self.search(tokenized_query.to_vec(), n));
-        }
-        scores
+    fn batch_search(&self, tokenized_queries: Vec<Vec<String>>, n: usize) -> PyResult<Vec<Vec<(String, f32)>>> {
+        Ok(
+            tokenized_queries.par_iter().map(
+                |tokenized_query| self.search(tokenized_query.to_vec(), n).unwrap()
+            ).collect()
+        )
     }
 
     fn add_documents(&mut self, tokenized_docs: Vec<(String, Vec<String>)>){
         for (id, tokenized_doc) in tqdm_rs::Tqdm::new(tokenized_docs.iter()) {
             self.add_document(id.to_string(), tokenized_doc.to_vec());
-        }
+        };
     }
 
     fn add_document(&mut self, id:String, tokenized_doc: Vec<String>) {
@@ -213,7 +211,7 @@ impl BM25 {
                     obj.add_neighbour(&id, freq as i32);
                     self.token_index.insert(token.to_string(), obj);
                 } else{
-                    self.token_index.get_mut(token).unwrap().add_neighbour(&id, freq as i32);
+                    self.token_index.get_mut(token.as_str()).unwrap().add_neighbour(&id, freq as i32);
                 }
             }
             self.index.insert(id.to_string(), document);
