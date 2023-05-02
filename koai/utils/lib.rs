@@ -2,11 +2,9 @@ extern crate pyo3;
 use pyo3::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
 use serde_derive::{Serialize,Deserialize};
 use std::path::Path;
 use tqdm_rs;
-use std::time::Instant;
 use counter::Counter;
 use rayon::prelude::*;
 
@@ -148,7 +146,7 @@ impl BM25 {
 
     fn search_instance(&self, tokenized_query: Vec<String>, n: usize) -> PyResult<Vec<(String, f32)>> {
         let average_doc_length = self.index.values().map(|doc| doc.len()).sum::<usize>() as f32 / self.index.len() as f32;
-        let mut unique_tokens = tokenized_query.iter().collect::<Counter<_>>();
+        let unique_tokens = tokenized_query.iter().collect::<Counter<_>>();
         let mut candidate_docs = HashSet::new();
         for &token in unique_tokens.keys() {
             if self.token_index.contains_key(token) {
