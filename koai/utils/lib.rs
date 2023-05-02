@@ -29,7 +29,7 @@ struct Document {
 }
 
 #[pyclass]
-pub struct BM25 {
+struct BM25 {
     index: HashMap<String, Document>,
     token_index: HashMap<String, Token>,
     map_bm25: HashMap<String, f32>,
