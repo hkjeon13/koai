@@ -14,7 +14,6 @@ fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f3
     (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
 }
 
-#[pyclass]
 #[derive(Serialize, Deserialize, Debug)]
 struct Token {
     text: String,
@@ -38,7 +37,6 @@ struct BM25 {
     average_length: f32,
 }
 
-#[pymethods]
 impl Token {
     fn add_neighbour(&mut self, neighbour: &str, value:i32) {
         if self.maps.contains_key(neighbour) {
