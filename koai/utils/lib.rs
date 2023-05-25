@@ -157,13 +157,13 @@ impl BM25 {
 
         for (token, _) in target_tokens {
             if self.token_index.contains_key(token) {
-                let idf = self.token_index.get(token).unwrap().maps.len() as f32;
+                let df = self.token_index.get(token).unwrap().maps.len() as f32;
                 for (doc_id, &freq) in self.token_index.get(token).unwrap().maps.iter(){
                     let tf = freq as f32;
                     let doc_len = self.index.get(doc_id).unwrap().len();
                     *scores.entry(doc_id.to_string()).or_insert(0.0) += _calculate(
                         tf, num_docs, doc_len,
-                        average_doc_length, self.k1, self.b, idf
+                        average_doc_length, self.k1, self.b, df
                     );
                 }
             }
