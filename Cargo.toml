@@ -15,6 +15,9 @@ crate-type = ["cdylib"]
 serde_derive = "1.0.117"
 serde_json = "*"
 serde = "*"
+tqdm-rs = "*"
+counter = "*"
+rayon = "*"
 
 [dependencies.pyo3]
 version = "*"
