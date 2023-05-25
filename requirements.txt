@@ -6,3 +6,4 @@ torch
 seqeval
 pytest
 setuptools_rust
+accelerate
