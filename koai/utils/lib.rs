@@ -7,8 +7,8 @@ use tqdm_rs;
 use counter::Counter;
 use rayon::prelude::*;
 
-fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, idf: f32) -> f32 {
-    (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 - idf + 0.5) / (idf + 0.5))+1.0).ln()
+fn _calculate(tf: f32, num_docs:f32, doc_len: usize, average_length: f32, k1: f32, b: f32, df: f32) -> f32 {
+    (tf * (k1 + 1.0)) / (tf + k1 * (1.0 - b + b * (doc_len as f32 / average_length))) * (((num_docs as f32 + 1.0) / (df + 1.0)).ln() + 1.0)
 }
 
 
@@ -115,11 +115,11 @@ impl BM25 {
         let average_doc_length = self.index.values().map(|doc| doc.len()).sum::<usize>() as f32 / self.index.len() as f32;
 
         for (token, token_obj) in tqdm_rs::Tqdm::new(self.token_index.iter()){
-            let idf = token_obj.maps.len() as f32;
+            let df = token_obj.maps.len() as f32;
             for (doc_id, freq) in token_obj.maps.iter() {
                 let tf = freq.to_owned() as f32;
                 let doc_len = self.index.get(doc_id).unwrap().len();
-                let score = _calculate(tf, self.index.len() as f32, doc_len, average_doc_length, self.k1, self.b, idf);
+                let score = _calculate(tf, self.index.len() as f32, doc_len, average_doc_length, self.k1, self.b, df);
                 map_bm25.insert(doc_id.to_owned()+"@"+token.to_string().as_str(), score);
             }
         }
