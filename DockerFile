@@ -1,1 +1,0 @@
-FROM hkjeon13/ubuntu:20.04-koai

@@ -1,0 +1,15 @@
+FROM python:3.10.11-slim-buster
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        git
+RUN git clone https://github.com/hkjeon13/koai.git
+WORKDIR koai/
+RUN git fetch --all && git pull origin main
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN python3.10 -m pip install --upgrade pip
+RUN python3.10 -m pip install setuptools_rust auditwheel patchelf
+RUN python3.10 setup.py bdist_wheel && \
+    python3 -m auditwheel repair dist/koai-*-cp*-cp*-linux*.whl --plat manylinux_2_34_x86_64
